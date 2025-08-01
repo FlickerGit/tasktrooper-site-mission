@@ -1,9 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import heroIllustration from "@/assets/hero-gardening-illustration.png";
 
 const HeroSection = () => {
   return (
     <section id="home" className="min-h-screen flex items-center justify-center bg-gradient-hero relative overflow-hidden">
+      {/* Hero illustration background */}
+      <div className="absolute inset-0 opacity-30">
+        <img 
+          src={heroIllustration} 
+          alt="Gardening illustration" 
+          className="w-full h-full object-cover object-bottom"
+        />
+      </div>
+      
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-20 left-10 w-32 h-32 bg-trooper-green rounded-full blur-xl"></div>
