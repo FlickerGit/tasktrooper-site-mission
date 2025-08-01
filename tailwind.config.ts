@@ -61,7 +61,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				'trooper-green': {
+					DEFAULT: 'hsl(var(--trooper-green))',
+					light: 'hsl(var(--trooper-green-light))',
+					dark: 'hsl(var(--trooper-green-dark))'
+				},
+				'trooper-accent': 'hsl(var(--trooper-accent))'
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-hero': 'var(--gradient-hero)'
+			},
+			boxShadow: {
+				'glow': 'var(--shadow-glow)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
