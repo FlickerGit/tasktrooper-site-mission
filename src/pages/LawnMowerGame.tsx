@@ -37,16 +37,16 @@ interface Level {
 }
 
 const LEVELS: Level[] = [
-  { number: 1, name: "Training Ground", gridSize: 40, mowerSpeed: 4, targetCompletion: 80, timeLimit: 90, regrowthSpeed: 15000, obstacleCount: 2, powerUpCount: 3 },
-  { number: 2, name: "Small Yard", gridSize: 35, mowerSpeed: 4, targetCompletion: 85, timeLimit: 80, regrowthSpeed: 12000, obstacleCount: 3, powerUpCount: 3 },
-  { number: 3, name: "Medium Yard", gridSize: 30, mowerSpeed: 3.5, targetCompletion: 85, timeLimit: 75, regrowthSpeed: 10000, obstacleCount: 4, powerUpCount: 2 },
-  { number: 4, name: "Large Yard", gridSize: 25, mowerSpeed: 3.5, targetCompletion: 90, timeLimit: 70, regrowthSpeed: 9000, obstacleCount: 5, powerUpCount: 2 },
-  { number: 5, name: "Estate Grounds", gridSize: 20, mowerSpeed: 3, targetCompletion: 90, timeLimit: 65, regrowthSpeed: 8000, obstacleCount: 6, powerUpCount: 2 },
-  { number: 6, name: "Sports Field", gridSize: 20, mowerSpeed: 3, targetCompletion: 95, timeLimit: 60, regrowthSpeed: 7000, obstacleCount: 7, powerUpCount: 1 },
-  { number: 7, name: "Golf Course", gridSize: 15, mowerSpeed: 2.5, targetCompletion: 95, timeLimit: 55, regrowthSpeed: 6000, obstacleCount: 8, powerUpCount: 1 },
-  { number: 8, name: "Stadium", gridSize: 15, mowerSpeed: 2.5, targetCompletion: 98, timeLimit: 50, regrowthSpeed: 5000, obstacleCount: 9, powerUpCount: 1 },
-  { number: 9, name: "Pro Challenge", gridSize: 12, mowerSpeed: 2, targetCompletion: 98, timeLimit: 45, regrowthSpeed: 4000, obstacleCount: 10, powerUpCount: 1 },
-  { number: 10, name: "Master Landscaper", gridSize: 10, mowerSpeed: 2, targetCompletion: 100, timeLimit: 40, regrowthSpeed: 3000, obstacleCount: 12, powerUpCount: 1 },
+  { number: 1, name: "Training Ground", gridSize: 40, mowerSpeed: 2.5, targetCompletion: 80, timeLimit: 90, regrowthSpeed: 15000, obstacleCount: 2, powerUpCount: 3 },
+  { number: 2, name: "Small Yard", gridSize: 35, mowerSpeed: 2.5, targetCompletion: 85, timeLimit: 80, regrowthSpeed: 12000, obstacleCount: 3, powerUpCount: 3 },
+  { number: 3, name: "Medium Yard", gridSize: 30, mowerSpeed: 2.2, targetCompletion: 85, timeLimit: 75, regrowthSpeed: 10000, obstacleCount: 4, powerUpCount: 2 },
+  { number: 4, name: "Large Yard", gridSize: 25, mowerSpeed: 2.2, targetCompletion: 90, timeLimit: 70, regrowthSpeed: 9000, obstacleCount: 5, powerUpCount: 2 },
+  { number: 5, name: "Estate Grounds", gridSize: 20, mowerSpeed: 2, targetCompletion: 90, timeLimit: 65, regrowthSpeed: 8000, obstacleCount: 6, powerUpCount: 2 },
+  { number: 6, name: "Sports Field", gridSize: 20, mowerSpeed: 2, targetCompletion: 95, timeLimit: 60, regrowthSpeed: 7000, obstacleCount: 7, powerUpCount: 1 },
+  { number: 7, name: "Golf Course", gridSize: 15, mowerSpeed: 1.8, targetCompletion: 95, timeLimit: 55, regrowthSpeed: 6000, obstacleCount: 8, powerUpCount: 1 },
+  { number: 8, name: "Stadium", gridSize: 15, mowerSpeed: 1.8, targetCompletion: 98, timeLimit: 50, regrowthSpeed: 5000, obstacleCount: 9, powerUpCount: 1 },
+  { number: 9, name: "Pro Challenge", gridSize: 12, mowerSpeed: 1.5, targetCompletion: 98, timeLimit: 45, regrowthSpeed: 4000, obstacleCount: 10, powerUpCount: 1 },
+  { number: 10, name: "Master Landscaper", gridSize: 10, mowerSpeed: 1.5, targetCompletion: 100, timeLimit: 40, regrowthSpeed: 3000, obstacleCount: 12, powerUpCount: 1 },
 ];
 
 const LawnMowerGame = () => {
@@ -309,39 +309,120 @@ const LawnMowerGame = () => {
       // Draw
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw grass with 3 states
+      // Draw grass with 3 states and texture
       state.grass.forEach((patch) => {
         if (patch.mowCount === 0) {
-          ctx.fillStyle = "#22c55e"; // Tall grass - bright green
+          // Tall grass - bright green with gradient
+          const gradient = ctx.createLinearGradient(patch.x, patch.y, patch.x, patch.y + level.gridSize);
+          gradient.addColorStop(0, "#4ade80");
+          gradient.addColorStop(1, "#22c55e");
+          ctx.fillStyle = gradient;
         } else if (patch.mowCount === 1) {
-          ctx.fillStyle = "#16a34a"; // Medium grass - medium green
+          // Medium grass - medium green
+          const gradient = ctx.createLinearGradient(patch.x, patch.y, patch.x, patch.y + level.gridSize);
+          gradient.addColorStop(0, "#22c55e");
+          gradient.addColorStop(1, "#16a34a");
+          ctx.fillStyle = gradient;
         } else {
-          ctx.fillStyle = "#15803d"; // Scalped - dark green
+          // Scalped - dark green with stripes
+          const gradient = ctx.createLinearGradient(patch.x, patch.y, patch.x, patch.y + level.gridSize);
+          gradient.addColorStop(0, "#16a34a");
+          gradient.addColorStop(1, "#15803d");
+          ctx.fillStyle = gradient;
         }
         ctx.fillRect(patch.x, patch.y, level.gridSize, level.gridSize);
+        
+        // Add grass texture
+        if (patch.mowCount === 0) {
+          ctx.strokeStyle = "rgba(34, 197, 94, 0.3)";
+          ctx.lineWidth = 1;
+          for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(patch.x + (i * level.gridSize / 3), patch.y);
+            ctx.lineTo(patch.x + (i * level.gridSize / 3), patch.y + level.gridSize);
+            ctx.stroke();
+          }
+        }
       });
 
-      // Draw obstacles
+      // Draw obstacles with shadows and better design
       state.obstacles.forEach((obstacle) => {
-        ctx.fillStyle = obstacle.type === "rock" ? "#78716c" : obstacle.type === "gnome" ? "#dc2626" : obstacle.type === "dog" ? "#a16207" : "#3b82f6";
-        ctx.fillRect(obstacle.x, obstacle.y, 30, 30);
+        // Shadow
+        ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+        ctx.fillRect(obstacle.x + 2, obstacle.y + 32, 36, 4);
+        
+        // Obstacle base
+        const gradient = ctx.createRadialGradient(obstacle.x + 20, obstacle.y + 20, 5, obstacle.x + 20, obstacle.y + 20, 25);
+        if (obstacle.type === "rock") {
+          gradient.addColorStop(0, "#a8a29e");
+          gradient.addColorStop(1, "#57534e");
+        } else if (obstacle.type === "gnome") {
+          gradient.addColorStop(0, "#fca5a5");
+          gradient.addColorStop(1, "#dc2626");
+        } else if (obstacle.type === "dog") {
+          gradient.addColorStop(0, "#fde68a");
+          gradient.addColorStop(1, "#d97706");
+        } else {
+          gradient.addColorStop(0, "#93c5fd");
+          gradient.addColorStop(1, "#3b82f6");
+        }
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(obstacle.x + 20, obstacle.y + 20, 20, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Border
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Emoji
         ctx.fillStyle = "#ffffff";
-        ctx.font = "20px Arial";
+        ctx.font = "24px Arial";
         ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         const emoji = obstacle.type === "rock" ? "🪨" : obstacle.type === "gnome" ? "🧙" : obstacle.type === "dog" ? "🐕" : "💦";
-        ctx.fillText(emoji, obstacle.x + 15, obstacle.y + 22);
+        ctx.fillText(emoji, obstacle.x + 20, obstacle.y + 20);
       });
 
-      // Draw power-ups
+      // Draw power-ups with glow effect
       state.powerUps.forEach((powerUp) => {
         if (!powerUp.collected) {
-          ctx.fillStyle = powerUp.type === "time" ? "#10b981" : powerUp.type === "fuel" ? "#f59e0b" : "#8b5cf6";
-          ctx.fillRect(powerUp.x, powerUp.y, 30, 30);
+          // Glow effect
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = powerUp.type === "time" ? "#10b981" : powerUp.type === "fuel" ? "#f59e0b" : "#8b5cf6";
+          
+          // Power-up base
+          const gradient = ctx.createRadialGradient(powerUp.x + 20, powerUp.y + 20, 5, powerUp.x + 20, powerUp.y + 20, 25);
+          if (powerUp.type === "time") {
+            gradient.addColorStop(0, "#6ee7b7");
+            gradient.addColorStop(1, "#10b981");
+          } else if (powerUp.type === "fuel") {
+            gradient.addColorStop(0, "#fcd34d");
+            gradient.addColorStop(1, "#f59e0b");
+          } else {
+            gradient.addColorStop(0, "#c4b5fd");
+            gradient.addColorStop(1, "#8b5cf6");
+          }
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(powerUp.x + 20, powerUp.y + 20, 20, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Border
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          
+          ctx.shadowBlur = 0;
+          
+          // Emoji
           ctx.fillStyle = "#ffffff";
-          ctx.font = "20px Arial";
+          ctx.font = "24px Arial";
           ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
           const emoji = powerUp.type === "time" ? "⏰" : powerUp.type === "fuel" ? "⛽" : "⚡";
-          ctx.fillText(emoji, powerUp.x + 15, powerUp.y + 22);
+          ctx.fillText(emoji, powerUp.x + 20, powerUp.y + 20);
         }
       });
 
@@ -361,27 +442,64 @@ const LawnMowerGame = () => {
         ctx.stroke();
       }
 
-      // Draw mower
-      ctx.fillStyle = "#ef4444";
+      // Draw mower with realistic design
+      // Shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.fillRect(state.mowerX + 2, state.mowerY + state.mowerSize + 2, state.mowerSize, 6);
+      
+      // Mower body - gradient for depth
+      const mowerGradient = ctx.createLinearGradient(
+        state.mowerX, 
+        state.mowerY, 
+        state.mowerX, 
+        state.mowerY + state.mowerSize
+      );
+      mowerGradient.addColorStop(0, "#f87171");
+      mowerGradient.addColorStop(0.5, "#ef4444");
+      mowerGradient.addColorStop(1, "#dc2626");
+      ctx.fillStyle = mowerGradient;
       ctx.fillRect(state.mowerX, state.mowerY, state.mowerSize, state.mowerSize);
       
-      // Mower details
+      // Mower deck (darker center)
       ctx.fillStyle = "#991b1b";
       ctx.fillRect(state.mowerX + 5, state.mowerY + 5, state.mowerSize - 10, state.mowerSize - 10);
       
-      // Mower handle
-      ctx.strokeStyle = "#991b1b";
-      ctx.lineWidth = 3;
+      // Wheels
+      ctx.fillStyle = "#1f2937";
       ctx.beginPath();
-      ctx.moveTo(state.mowerX + state.mowerSize / 2, state.mowerY);
+      ctx.arc(state.mowerX + 8, state.mowerY + 8, 5, 0, Math.PI * 2);
+      ctx.arc(state.mowerX + state.mowerSize - 8, state.mowerY + 8, 5, 0, Math.PI * 2);
+      ctx.arc(state.mowerX + 8, state.mowerY + state.mowerSize - 8, 5, 0, Math.PI * 2);
+      ctx.arc(state.mowerX + state.mowerSize - 8, state.mowerY + state.mowerSize - 8, 5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Mower handle
+      ctx.strokeStyle = "#374151";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(state.mowerX + state.mowerSize / 2, state.mowerY + 5);
       ctx.lineTo(state.mowerX + state.mowerSize / 2, state.mowerY - 15);
       ctx.stroke();
+      
+      // Handle grip
+      ctx.fillStyle = "#4b5563";
+      ctx.fillRect(state.mowerX + state.mowerSize / 2 - 8, state.mowerY - 18, 16, 6);
 
       // Blade height indicator on mower
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 12px Arial";
+      ctx.font = "bold 14px Arial";
       ctx.textAlign = "center";
-      ctx.fillText(bladeHeight.toString(), state.mowerX + state.mowerSize / 2, state.mowerY + state.mowerSize / 2 + 4);
+      ctx.textBaseline = "middle";
+      ctx.fillText(bladeHeight.toString(), state.mowerX + state.mowerSize / 2, state.mowerY + state.mowerSize / 2);
+      
+      // Speed boost indicator
+      if (speedBoostActive) {
+        ctx.strokeStyle = "#a855f7";
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(state.mowerX - 3, state.mowerY - 3, state.mowerSize + 6, state.mowerSize + 6);
+        ctx.setLineDash([]);
+      }
 
       animationFrameId = requestAnimationFrame(gameLoop);
     };
