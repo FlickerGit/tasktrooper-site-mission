@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,6 +25,7 @@ const Header = () => {
           <a href="#services" className="text-foreground hover:text-primary transition-colors">Services</a>
           <a href="#quote" className="text-foreground hover:text-primary transition-colors">Request a Quote</a>
           <a href="#contact" className="text-foreground hover:text-primary transition-colors">Contact Us</a>
+          <Link to="/game" className="text-trooper-green hover:text-trooper-green/80 transition-colors font-semibold">🎮 Game</Link>
           <a href="#blog" className="text-muted-foreground cursor-not-allowed">Blog</a>
         </nav>
 
@@ -52,6 +54,7 @@ const Header = () => {
             <a href="#services" className="text-foreground hover:text-primary transition-colors">Services</a>
             <a href="#quote" className="text-foreground hover:text-primary transition-colors">Request a Quote</a>
             <a href="#contact" className="text-foreground hover:text-primary transition-colors">Contact Us</a>
+            <Link to="/game" className="text-trooper-green hover:text-trooper-green/80 transition-colors font-semibold">🎮 Game</Link>
             <a href="#blog" className="text-muted-foreground cursor-not-allowed">Blog</a>
             <div className="flex flex-col space-y-2 pt-4 border-t border-border">
               <Button variant="ghost" className="text-foreground justify-start">Log In</Button>
