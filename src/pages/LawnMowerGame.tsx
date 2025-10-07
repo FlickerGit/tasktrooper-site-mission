@@ -8,6 +8,20 @@ interface GrassPatch {
   x: number;
   y: number;
   mowCount: number; // 0 = tall, 1 = medium, 2 = scalped
+  lastMowTime: number;
+}
+
+interface PowerUp {
+  x: number;
+  y: number;
+  type: "time" | "fuel" | "speed";
+  collected: boolean;
+}
+
+interface Obstacle {
+  x: number;
+  y: number;
+  type: "gnome" | "dog" | "sprinkler" | "rock";
 }
 
 interface Level {
@@ -15,20 +29,24 @@ interface Level {
   name: string;
   gridSize: number;
   mowerSpeed: number;
-  targetCompletion: number; // percentage of grass that needs to be scalped
+  targetCompletion: number;
+  timeLimit: number; // seconds
+  regrowthSpeed: number; // milliseconds before grass regrows
+  obstacleCount: number;
+  powerUpCount: number;
 }
 
 const LEVELS: Level[] = [
-  { number: 1, name: "Training Ground", gridSize: 40, mowerSpeed: 4, targetCompletion: 80 },
-  { number: 2, name: "Small Yard", gridSize: 35, mowerSpeed: 4, targetCompletion: 85 },
-  { number: 3, name: "Medium Yard", gridSize: 30, mowerSpeed: 3.5, targetCompletion: 85 },
-  { number: 4, name: "Large Yard", gridSize: 25, mowerSpeed: 3.5, targetCompletion: 90 },
-  { number: 5, name: "Estate Grounds", gridSize: 20, mowerSpeed: 3, targetCompletion: 90 },
-  { number: 6, name: "Sports Field", gridSize: 20, mowerSpeed: 3, targetCompletion: 95 },
-  { number: 7, name: "Golf Course", gridSize: 15, mowerSpeed: 2.5, targetCompletion: 95 },
-  { number: 8, name: "Stadium", gridSize: 15, mowerSpeed: 2.5, targetCompletion: 98 },
-  { number: 9, name: "Pro Challenge", gridSize: 12, mowerSpeed: 2, targetCompletion: 98 },
-  { number: 10, name: "Master Landscaper", gridSize: 10, mowerSpeed: 2, targetCompletion: 100 },
+  { number: 1, name: "Training Ground", gridSize: 40, mowerSpeed: 4, targetCompletion: 80, timeLimit: 90, regrowthSpeed: 15000, obstacleCount: 2, powerUpCount: 3 },
+  { number: 2, name: "Small Yard", gridSize: 35, mowerSpeed: 4, targetCompletion: 85, timeLimit: 80, regrowthSpeed: 12000, obstacleCount: 3, powerUpCount: 3 },
+  { number: 3, name: "Medium Yard", gridSize: 30, mowerSpeed: 3.5, targetCompletion: 85, timeLimit: 75, regrowthSpeed: 10000, obstacleCount: 4, powerUpCount: 2 },
+  { number: 4, name: "Large Yard", gridSize: 25, mowerSpeed: 3.5, targetCompletion: 90, timeLimit: 70, regrowthSpeed: 9000, obstacleCount: 5, powerUpCount: 2 },
+  { number: 5, name: "Estate Grounds", gridSize: 20, mowerSpeed: 3, targetCompletion: 90, timeLimit: 65, regrowthSpeed: 8000, obstacleCount: 6, powerUpCount: 2 },
+  { number: 6, name: "Sports Field", gridSize: 20, mowerSpeed: 3, targetCompletion: 95, timeLimit: 60, regrowthSpeed: 7000, obstacleCount: 7, powerUpCount: 1 },
+  { number: 7, name: "Golf Course", gridSize: 15, mowerSpeed: 2.5, targetCompletion: 95, timeLimit: 55, regrowthSpeed: 6000, obstacleCount: 8, powerUpCount: 1 },
+  { number: 8, name: "Stadium", gridSize: 15, mowerSpeed: 2.5, targetCompletion: 98, timeLimit: 50, regrowthSpeed: 5000, obstacleCount: 9, powerUpCount: 1 },
+  { number: 9, name: "Pro Challenge", gridSize: 12, mowerSpeed: 2, targetCompletion: 98, timeLimit: 45, regrowthSpeed: 4000, obstacleCount: 10, powerUpCount: 1 },
+  { number: 10, name: "Master Landscaper", gridSize: 10, mowerSpeed: 2, targetCompletion: 100, timeLimit: 40, regrowthSpeed: 3000, obstacleCount: 12, powerUpCount: 1 },
 ];
 
 const LawnMowerGame = () => {
@@ -37,12 +55,20 @@ const LawnMowerGame = () => {
   const [bladeHeight, setBladeHeight] = useState(3);
   const [gameStarted, setGameStarted] = useState(false);
   const [levelComplete, setLevelComplete] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [fuel, setFuel] = useState(100);
+  const [score, setScore] = useState(0);
+  const [speedBoostActive, setSpeedBoostActive] = useState(false);
   const gameStateRef = useRef({
     mowerX: 50,
     mowerY: 50,
     mowerSize: 40,
     grass: [] as GrassPatch[],
+    powerUps: [] as PowerUp[],
+    obstacles: [] as Obstacle[],
     keys: {} as Record<string, boolean>,
+    currentSpeed: 1,
+    startTime: 0,
   });
 
   const level = LEVELS[currentLevel - 1];
@@ -62,19 +88,54 @@ const LawnMowerGame = () => {
     // Reset game state
     setGameStarted(false);
     setLevelComplete(false);
+    setTimeRemaining(level.timeLimit);
+    setFuel(100);
+    setScore(0);
+    setSpeedBoostActive(false);
     gameStateRef.current.mowerX = 50;
     gameStateRef.current.mowerY = 50;
+    gameStateRef.current.currentSpeed = 1;
+    gameStateRef.current.startTime = Date.now();
 
     // Initialize grass grid based on level
     const grass: GrassPatch[] = [];
     for (let x = 0; x < canvas.width; x += level.gridSize) {
       for (let y = 0; y < canvas.height; y += level.gridSize) {
-        grass.push({ x, y, mowCount: 0 });
+        grass.push({ x, y, mowCount: 0, lastMowTime: 0 });
       }
     }
     gameStateRef.current.grass = grass;
+
+    // Initialize obstacles
+    const obstacles: Obstacle[] = [];
+    const obstacleTypes: Obstacle["type"][] = ["gnome", "dog", "sprinkler", "rock"];
+    for (let i = 0; i < level.obstacleCount; i++) {
+      const randomX = Math.floor(Math.random() * (canvas.width - 100)) + 50;
+      const randomY = Math.floor(Math.random() * (canvas.height - 100)) + 50;
+      obstacles.push({
+        x: randomX,
+        y: randomY,
+        type: obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)]
+      });
+    }
+    gameStateRef.current.obstacles = obstacles;
+
+    // Initialize power-ups
+    const powerUps: PowerUp[] = [];
+    const powerUpTypes: PowerUp["type"][] = ["time", "fuel", "speed"];
+    for (let i = 0; i < level.powerUpCount; i++) {
+      const randomX = Math.floor(Math.random() * (canvas.width - 100)) + 50;
+      const randomY = Math.floor(Math.random() * (canvas.height - 100)) + 50;
+      powerUps.push({
+        x: randomX,
+        y: randomY,
+        type: powerUpTypes[i % powerUpTypes.length],
+        collected: false
+      });
+    }
+    gameStateRef.current.powerUps = powerUps;
     
-    toast(`Level ${level.number}: ${level.name}`);
+    toast(`Level ${level.number}: ${level.name} - ${level.timeLimit}s`);
   }, [currentLevel]);
 
   // Game loop
@@ -100,24 +161,65 @@ const LawnMowerGame = () => {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
 
+    // Timer countdown
+    let timerInterval: number;
+    if (gameStarted && !levelComplete) {
+      timerInterval = window.setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 0) {
+            toast.error("Time's up! Level failed.");
+            setLevelComplete(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
     // Game loop
     let animationFrameId: number;
     const gameLoop = () => {
       const state = gameStateRef.current;
 
-      // Update mower position
+      if (!gameStarted) {
+        animationFrameId = requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      // Update mower position with speed multiplier
+      const currentSpeed = level.mowerSpeed * state.currentSpeed;
       if (state.keys["ArrowUp"] && state.mowerY > 0) {
-        state.mowerY -= level.mowerSpeed;
+        state.mowerY -= currentSpeed;
+        setFuel(prev => Math.max(0, prev - 0.05));
       }
       if (state.keys["ArrowDown"] && state.mowerY < canvas.height - state.mowerSize) {
-        state.mowerY += level.mowerSpeed;
+        state.mowerY += currentSpeed;
+        setFuel(prev => Math.max(0, prev - 0.05));
       }
       if (state.keys["ArrowLeft"] && state.mowerX > 0) {
-        state.mowerX -= level.mowerSpeed;
+        state.mowerX -= currentSpeed;
+        setFuel(prev => Math.max(0, prev - 0.05));
       }
       if (state.keys["ArrowRight"] && state.mowerX < canvas.width - state.mowerSize) {
-        state.mowerX += level.mowerSpeed;
+        state.mowerX += currentSpeed;
+        setFuel(prev => Math.max(0, prev - 0.05));
       }
+
+      // Check fuel
+      if (fuel <= 0) {
+        toast.error("Out of fuel! Level failed.");
+        setLevelComplete(true);
+        setGameStarted(false);
+      }
+
+      // Grass regrowth
+      const currentTime = Date.now();
+      state.grass.forEach((patch) => {
+        if (patch.mowCount > 0 && currentTime - patch.lastMowTime > level.regrowthSpeed) {
+          patch.mowCount = Math.max(0, patch.mowCount - 1);
+          patch.lastMowTime = currentTime;
+        }
+      });
 
       // Check grass collision and mowing
       state.grass.forEach((patch) => {
@@ -128,23 +230,66 @@ const LawnMowerGame = () => {
           state.mowerY < patch.y + level.gridSize &&
           state.mowerY + state.mowerSize > patch.y
         ) {
-          // Blade height determines mowing effectiveness
-          // Height 1-2: scalps immediately (2 cuts at once)
-          // Height 3: normal (1 cut)
-          // Height 4-5: requires 2 passes for each stage
-          const cutsPerPass = bladeHeight <= 2 ? 2 : bladeHeight === 3 ? 1 : 0.5;
+          const previousMowCount = patch.mowCount;
           
           if (bladeHeight <= 2) {
-            patch.mowCount = 2; // Scalp immediately
+            patch.mowCount = 2;
           } else if (bladeHeight === 3) {
             patch.mowCount = Math.min(2, patch.mowCount + 1);
           } else {
-            // Heights 4-5 are less effective
             const rand = Math.random();
-            if (rand < 0.3) { // 30% chance to mow per frame
+            if (rand < 0.3) {
               patch.mowCount = Math.min(2, patch.mowCount + 1);
             }
           }
+          
+          if (patch.mowCount > previousMowCount) {
+            patch.lastMowTime = currentTime;
+            setScore(prev => prev + (patch.mowCount === 2 ? 10 : 5));
+          }
+        }
+      });
+
+      // Check power-up collision
+      state.powerUps.forEach((powerUp) => {
+        if (
+          !powerUp.collected &&
+          state.mowerX < powerUp.x + 30 &&
+          state.mowerX + state.mowerSize > powerUp.x &&
+          state.mowerY < powerUp.y + 30 &&
+          state.mowerY + state.mowerSize > powerUp.y
+        ) {
+          powerUp.collected = true;
+          
+          if (powerUp.type === "time") {
+            setTimeRemaining(prev => prev + 15);
+            toast.success("+15 seconds!");
+          } else if (powerUp.type === "fuel") {
+            setFuel(prev => Math.min(100, prev + 30));
+            toast.success("+30 fuel!");
+          } else if (powerUp.type === "speed") {
+            state.currentSpeed = 1.5;
+            setSpeedBoostActive(true);
+            toast.success("Speed boost activated!");
+            setTimeout(() => {
+              state.currentSpeed = 1;
+              setSpeedBoostActive(false);
+            }, 5000);
+          }
+        }
+      });
+
+      // Check obstacle collision
+      state.obstacles.forEach((obstacle) => {
+        if (
+          state.mowerX < obstacle.x + 30 &&
+          state.mowerX + state.mowerSize > obstacle.x &&
+          state.mowerY < obstacle.y + 30 &&
+          state.mowerY + state.mowerSize > obstacle.y
+        ) {
+          // Slow down or push back slightly
+          state.currentSpeed = Math.max(0.3, state.currentSpeed - 0.1);
+          setFuel(prev => Math.max(0, prev - 0.2));
         }
       });
 
@@ -174,6 +319,30 @@ const LawnMowerGame = () => {
           ctx.fillStyle = "#15803d"; // Scalped - dark green
         }
         ctx.fillRect(patch.x, patch.y, level.gridSize, level.gridSize);
+      });
+
+      // Draw obstacles
+      state.obstacles.forEach((obstacle) => {
+        ctx.fillStyle = obstacle.type === "rock" ? "#78716c" : obstacle.type === "gnome" ? "#dc2626" : obstacle.type === "dog" ? "#a16207" : "#3b82f6";
+        ctx.fillRect(obstacle.x, obstacle.y, 30, 30);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        const emoji = obstacle.type === "rock" ? "🪨" : obstacle.type === "gnome" ? "🧙" : obstacle.type === "dog" ? "🐕" : "💦";
+        ctx.fillText(emoji, obstacle.x + 15, obstacle.y + 22);
+      });
+
+      // Draw power-ups
+      state.powerUps.forEach((powerUp) => {
+        if (!powerUp.collected) {
+          ctx.fillStyle = powerUp.type === "time" ? "#10b981" : powerUp.type === "fuel" ? "#f59e0b" : "#8b5cf6";
+          ctx.fillRect(powerUp.x, powerUp.y, 30, 30);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "20px Arial";
+          ctx.textAlign = "center";
+          const emoji = powerUp.type === "time" ? "⏰" : powerUp.type === "fuel" ? "⛽" : "⚡";
+          ctx.fillText(emoji, powerUp.x + 15, powerUp.y + 22);
+        }
       });
 
       // Draw grid lines
@@ -223,8 +392,9 @@ const LawnMowerGame = () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       cancelAnimationFrame(animationFrameId);
+      if (timerInterval) clearInterval(timerInterval);
     };
-  }, [gameStarted, currentLevel, bladeHeight, levelComplete]);
+  }, [gameStarted, currentLevel, bladeHeight, levelComplete, fuel]);
 
   const totalGrass = gameStateRef.current.grass.length;
   const scalpedGrass = gameStateRef.current.grass.filter(p => p.mowCount === 2).length;
@@ -272,47 +442,68 @@ const LawnMowerGame = () => {
         </div>
 
         {/* Game Controls & Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {/* Time */}
+          <div className="bg-card p-4 rounded-lg border border-border">
+            <p className="text-sm text-muted-foreground">Time</p>
+            <p className="text-3xl font-bold text-primary">{timeRemaining}s</p>
+          </div>
+
+          {/* Fuel */}
+          <div className="bg-card p-4 rounded-lg border border-border">
+            <p className="text-sm text-muted-foreground">Fuel</p>
+            <p className="text-3xl font-bold text-amber-500">{Math.round(fuel)}%</p>
+          </div>
+
+          {/* Score */}
+          <div className="bg-card p-4 rounded-lg border border-border">
+            <p className="text-sm text-muted-foreground">Score</p>
+            <p className="text-3xl font-bold text-trooper-green">{score}</p>
+          </div>
+
+          {/* Progress */}
+          <div className="bg-card p-4 rounded-lg border border-border">
+            <p className="text-sm text-muted-foreground">Progress</p>
+            <p className="text-3xl font-bold text-trooper-green">{progress}%</p>
+          </div>
+
           {/* Blade Height Control */}
           <div className="bg-card p-4 rounded-lg border border-border">
-            <p className="text-sm text-muted-foreground mb-2">Blade Height</p>
-            <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground mb-2">Blade</p>
+            <div className="flex items-center justify-between gap-2">
               <Button 
                 size="sm" 
                 variant="outline" 
                 onClick={() => adjustBladeHeight("down")}
                 disabled={bladeHeight === 1}
+                className="h-8 w-8 p-0"
               >
                 <ChevronDown className="h-4 w-4" />
               </Button>
               <div className="text-center flex-1">
-                <p className="text-3xl font-bold text-primary">{bladeHeight}</p>
-                <p className="text-xs text-muted-foreground">{bladeHeightNames[bladeHeight]}</p>
+                <p className="text-2xl font-bold text-primary">{bladeHeight}</p>
               </div>
               <Button 
                 size="sm" 
                 variant="outline" 
                 onClick={() => adjustBladeHeight("up")}
                 disabled={bladeHeight === 5}
+                className="h-8 w-8 p-0"
               >
                 <ChevronUp className="h-4 w-4" />
               </Button>
             </div>
           </div>
+        </div>
 
-          {/* Progress */}
-          <div className="bg-card p-4 rounded-lg border border-border">
-            <p className="text-sm text-muted-foreground">Completion</p>
-            <p className="text-3xl font-bold text-trooper-green">{progress}%</p>
-            <p className="text-xs text-muted-foreground">{scalpedGrass} / {totalGrass} scalped</p>
+        {/* Status & Boosts */}
+        <div className="bg-card p-4 rounded-lg border border-border flex items-center justify-between">
+          <div>
+            {!gameStarted && <p className="text-sm text-muted-foreground">Press arrow keys to start!</p>}
+            {gameStarted && !levelComplete && <p className="text-sm text-primary animate-pulse">Mowing in progress...</p>}
+            {levelComplete && <p className="text-lg text-trooper-green font-bold">✅ Level Complete!</p>}
           </div>
-
-          {/* Status */}
-          <div className="bg-card p-4 rounded-lg border border-border flex items-center justify-center">
-            {!gameStarted && <p className="text-sm text-muted-foreground text-center">Press arrow keys to start!</p>}
-            {gameStarted && !levelComplete && <p className="text-sm text-primary text-center animate-pulse">Mowing in progress...</p>}
-            {levelComplete && <p className="text-lg text-trooper-green font-bold text-center">✅ Level Complete!</p>}
-          </div>
+          {speedBoostActive && <p className="text-sm text-purple-500 font-bold animate-pulse">⚡ SPEED BOOST ACTIVE</p>}
         </div>
 
         {/* Game Canvas */}
@@ -326,20 +517,26 @@ const LawnMowerGame = () => {
         {/* Instructions */}
         <div className="bg-card p-4 rounded-lg border border-border">
           <h2 className="text-lg font-semibold text-foreground mb-2">How to Play</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>🎮 Use <strong>Arrow Keys</strong> to move the lawn mower</li>
-              <li>🔼🔽 Adjust <strong>Blade Height</strong> using the buttons</li>
-              <li>🌱 <span className="text-trooper-green">Bright green</span> = tall grass (unmowed)</li>
-              <li>🌿 <span className="text-green-600">Medium green</span> = mowed once</li>
-              <li>✅ <span className="text-green-800">Dark green</span> = scalped (goal!)</li>
+              <li>🎮 Use <strong>Arrow Keys</strong> to move</li>
+              <li>⏰ Complete before time runs out</li>
+              <li>⛽ Manage your fuel carefully</li>
+              <li>🌱 Grass regrows over time - be efficient!</li>
+              <li>🎯 Target: {level.targetCompletion}% scalped</li>
             </ul>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li><strong>Blade Height 1-2:</strong> Scalps in one pass (fastest)</li>
-              <li><strong>Blade Height 3:</strong> Normal mowing (balanced)</li>
-              <li><strong>Blade Height 4-5:</strong> Gentle cut (slower)</li>
-              <li>⚠️ Each patch can only be mowed <strong>twice maximum</strong></li>
-              <li>🎯 Goal: Scalp {level.targetCompletion}% of the lawn!</li>
+              <li><strong>Power-ups:</strong></li>
+              <li>⏰ Clock = +15 seconds</li>
+              <li>⛽ Gas can = +30 fuel</li>
+              <li>⚡ Lightning = speed boost (5s)</li>
+            </ul>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li><strong>Obstacles slow you down:</strong></li>
+              <li>🧙 Garden gnomes</li>
+              <li>🐕 Dogs running around</li>
+              <li>💦 Sprinklers</li>
+              <li>🪨 Rocks</li>
             </ul>
           </div>
         </div>
