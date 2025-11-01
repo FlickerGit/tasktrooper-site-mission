@@ -54,7 +54,7 @@ const ContactSection = () => {
                   <div>
                     <h5 className="font-semibold text-foreground">Phone</h5>
                     <p className="text-muted-foreground">Call us for immediate assistance</p>
-                    <p className="text-primary font-medium">+61 XXX XXX XXX</p>
+                    <p className="text-primary font-medium">+61 452 252 550</p>
                   </div>
                 </div>
 
@@ -65,7 +65,7 @@ const ContactSection = () => {
                   <div>
                     <h5 className="font-semibold text-foreground">Email</h5>
                     <p className="text-muted-foreground">Send us your queries anytime</p>
-                    <p className="text-primary font-medium">info@tasktroopersydney.com.au</p>
+                    <p className="text-primary font-medium">mark@tasktroopers.com.au</p>
                   </div>
                 </div>
 
