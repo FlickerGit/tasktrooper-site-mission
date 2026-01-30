@@ -44,13 +44,15 @@ const HeroSection = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </a>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="text-lg px-8 py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              Explore Our Services
-            </Button>
+            <a href="#services">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="text-lg px-8 py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                Explore Our Services
+              </Button>
+            </a>
           </div>
         </div>
       </div>
