@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 
 const ContactSection = () => {
+  const header = useRevealOnScroll<HTMLDivElement>();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -32,7 +34,12 @@ const ContactSection = () => {
   return (
     <section id="contact" className="py-20 bg-background">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+        <div
+          ref={header.ref}
+          className={`text-center mb-16 transition-all duration-700 ease-out ${
+            header.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          }`}
+        >
           <h3 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Get in <span className="bg-gradient-primary bg-clip-text text-transparent">Touch</span>
           </h3>
