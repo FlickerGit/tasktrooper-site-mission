@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scissors, Wrench, Sparkles, Settings } from "lucide-react";
+import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 
 const services = [
   {
@@ -29,10 +30,16 @@ const services = [
 ];
 
 const ServicesSection = () => {
+  const { ref, visible } = useRevealOnScroll<HTMLDivElement>();
   return (
     <section id="services" className="py-20 bg-background">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+        <div
+          ref={ref}
+          className={`text-center mb-16 transition-all duration-700 ease-out ${
+            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          }`}
+        >
           <h3 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Our <span className="bg-gradient-primary bg-clip-text text-transparent">Services</span>
           </h3>
@@ -43,7 +50,13 @@ const ServicesSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {services.map((service, index) => (
-            <Card key={index} className="bg-card border-border hover:border-primary transition-all duration-300 hover:shadow-glow group">
+            <Card
+              key={index}
+              style={{ transitionDelay: `${index * 100}ms` }}
+              className={`bg-card border-border hover:border-primary hover:shadow-glow group transition-all duration-700 ease-out ${
+                visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+              }`}
+            >
               <CardHeader className="text-center">
                 <div className={`mx-auto mb-4 p-3 rounded-full bg-muted ${service.color} group-hover:scale-110 transition-transform duration-300`}>
                   <service.icon className="h-8 w-8" />

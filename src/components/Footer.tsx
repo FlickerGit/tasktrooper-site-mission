@@ -42,7 +42,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-primary" />
-                <span className="text-muted-foreground">info@tasktroopersydney.com.au</span>
+                <span className="text-muted-foreground">mark@tasktroopers.com.au</span>
               </div>
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-primary mt-0.5" />
