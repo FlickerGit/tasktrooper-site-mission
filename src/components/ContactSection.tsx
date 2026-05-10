@@ -23,7 +23,9 @@ const ContactSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    const id = crypto.randomUUID();
     const { error } = await supabase.from("contact_messages").insert({
+      id,
       full_name: formData.fullName,
       email: formData.email,
       message: formData.message,
@@ -37,6 +39,18 @@ const ContactSection = () => {
       });
       return;
     }
+    supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "contact-message-notification",
+        recipientEmail: "mark@tasktroopers.com.au",
+        idempotencyKey: `contact-${id}`,
+        templateData: {
+          fullName: formData.fullName,
+          email: formData.email,
+          message: formData.message,
+        },
+      },
+    });
     toast({
       title: "Message Sent",
       description: "Thank you for your message. We'll get back to you soon!",
