@@ -25,7 +25,9 @@ const QuoteForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    const id = crypto.randomUUID();
     const { error } = await supabase.from("quote_requests").insert({
+      id,
       full_name: formData.fullName,
       email: formData.email,
       phone: formData.phone,
@@ -43,6 +45,23 @@ const QuoteForm = () => {
       });
       return;
     }
+    // Notify the business owner — fire and forget
+    supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "quote-request-notification",
+        recipientEmail: "mark@tasktroopers.com.au",
+        idempotencyKey: `quote-${id}`,
+        templateData: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          serviceType: formData.serviceType,
+          description: formData.description,
+          preferredDate: formData.preferredDate || "",
+        },
+      },
+    });
     toast({
       title: "Quote Request Submitted",
       description: "We'll get back to you within 24 hours with a detailed quote.",
