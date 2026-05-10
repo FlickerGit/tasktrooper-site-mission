@@ -7,6 +7,7 @@ import { Mail, Phone, MapPin } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
+import { supabase } from "@/integrations/supabase/client";
 
 const ContactSection = () => {
   const header = useRevealOnScroll<HTMLDivElement>();
@@ -17,9 +18,25 @@ const ContactSection = () => {
   });
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Connect to Supabase when integration is activated
+    setSubmitting(true);
+    const { error } = await supabase.from("contact_messages").insert({
+      full_name: formData.fullName,
+      email: formData.email,
+      message: formData.message,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast({
+        title: "Failed to send",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
     toast({
       title: "Message Sent",
       description: "Thank you for your message. We'll get back to you soon!",
@@ -144,9 +161,10 @@ const ContactSection = () => {
 
                 <Button 
                   type="submit" 
+                  disabled={submitting}
                   className="w-full bg-gradient-primary hover:opacity-90 text-lg py-3"
                 >
-                  Send Message
+                  {submitting ? "Sending..." : "Send Message"}
                 </Button>
               </form>
             </CardContent>
