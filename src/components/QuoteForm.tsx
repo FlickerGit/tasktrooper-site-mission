@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const QuoteForm = () => {
   const [formData, setFormData] = useState({
@@ -19,9 +20,29 @@ const QuoteForm = () => {
   });
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Connect to Supabase when integration is activated
+    setSubmitting(true);
+    const { error } = await supabase.from("quote_requests").insert({
+      full_name: formData.fullName,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      service_type: formData.serviceType,
+      description: formData.description,
+      preferred_date: formData.preferredDate || null,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast({
+        title: "Submission failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
     toast({
       title: "Quote Request Submitted",
       description: "We'll get back to you within 24 hours with a detailed quote.",
@@ -167,9 +188,10 @@ const QuoteForm = () => {
 
                 <Button 
                   type="submit" 
+                  disabled={submitting}
                   className="w-full bg-gradient-primary hover:opacity-90 text-lg py-6"
                 >
-                  Submit Quote Request
+                  {submitting ? "Submitting..." : "Submit Quote Request"}
                 </Button>
               </form>
             </CardContent>
