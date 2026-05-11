@@ -25,7 +25,7 @@ const Header = () => {
           <a href="#services" className="text-foreground hover:text-primary transition-colors">Services</a>
           <a href="#quote" className="text-foreground hover:text-primary transition-colors">Request a Quote</a>
           <a href="#contact" className="text-foreground hover:text-primary transition-colors">Contact Us</a>
-          <a href="#blog" className="text-muted-foreground cursor-not-allowed">Blog</a>
+          <Link to="/blog" className="text-foreground hover:text-primary transition-colors">Blog</Link>
         </nav>
 
         {/* Auth Buttons */}
@@ -54,7 +54,7 @@ const Header = () => {
             <a href="#quote" className="text-foreground hover:text-primary transition-colors">Request a Quote</a>
             <a href="#contact" className="text-foreground hover:text-primary transition-colors">Contact Us</a>
             
-            <a href="#blog" className="text-muted-foreground cursor-not-allowed">Blog</a>
+            <Link to="/blog" className="text-foreground hover:text-primary transition-colors">Blog</Link>
             <div className="flex flex-col space-y-2 pt-4 border-t border-border">
               <Button variant="ghost" className="text-foreground justify-start">Log In</Button>
               <Button className="bg-gradient-primary hover:opacity-90 justify-start">Sign Up</Button>
