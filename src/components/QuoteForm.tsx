@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,6 +21,39 @@ const QuoteForm = () => {
   const { toast } = useToast();
 
   const [submitting, setSubmitting] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState<Array<{ display_name: string; place_id: number }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingAddress, setLoadingAddress] = useState(false);
+  const addressDebounceRef = useRef<number | null>(null);
+  const addressBlurTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const query = formData.address.trim();
+    if (addressDebounceRef.current) window.clearTimeout(addressDebounceRef.current);
+    if (query.length < 3) {
+      setAddressSuggestions([]);
+      setLoadingAddress(false);
+      return;
+    }
+    setLoadingAddress(true);
+    addressDebounceRef.current = window.setTimeout(async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=au&addressdetails=1&limit=6&q=${encodeURIComponent(query)}`;
+        const res = await fetch(url, { headers: { "Accept-Language": "en-AU" } });
+        if (res.ok) {
+          const data = await res.json();
+          setAddressSuggestions(data);
+        }
+      } catch {
+        // silent — fallback to manual entry
+      } finally {
+        setLoadingAddress(false);
+      }
+    }, 350);
+    return () => {
+      if (addressDebounceRef.current) window.clearTimeout(addressDebounceRef.current);
+    };
+  }, [formData.address]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +112,12 @@ const QuoteForm = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const selectAddress = (display_name: string) => {
+    setFormData(prev => ({ ...prev, address: display_name }));
+    setAddressSuggestions([]);
+    setShowSuggestions(false);
   };
 
   return (
@@ -158,14 +197,46 @@ const QuoteForm = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="address">Property Address *</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
-                    required
-                    className="bg-background"
-                    placeholder="Enter the full property address"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => {
+                        handleInputChange("address", e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() => {
+                        // Delay to allow click on suggestion
+                        addressBlurTimeoutRef.current = window.setTimeout(() => setShowSuggestions(false), 150);
+                      }}
+                      autoComplete="off"
+                      required
+                      className="bg-background"
+                      placeholder="Start typing your address..."
+                    />
+                    {showSuggestions && (addressSuggestions.length > 0 || loadingAddress) && (
+                      <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-lg max-h-64 overflow-y-auto">
+                        {loadingAddress && addressSuggestions.length === 0 && (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">Searching…</div>
+                        )}
+                        {addressSuggestions.map((s) => (
+                          <button
+                            key={s.place_id}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              selectAddress(s.display_name);
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                          >
+                            {s.display_name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Suggestions powered by OpenStreetMap. Australian addresses only.</p>
                 </div>
 
                 <div className="space-y-2">
