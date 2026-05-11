@@ -97,6 +97,61 @@ const TypesOfGrassInAustralia = () => {
               <strong>Cool-season grasses</strong> like Tall Fescue stay greener through winter but struggle in the peak of a Sydney summer without consistent watering. Knowing which camp your lawn sits in is the foundation of every other decision you make about it.
             </p>
 
+            <h2 className="text-3xl font-bold text-foreground pt-6">At-a-glance comparison</h2>
+            <p>
+              A quick side-by-side of the five lawn grasses we cover below — handy if you're trying to identify what you've got, or weighing up which to lay.
+            </p>
+            <div className="not-prose overflow-x-auto rounded-xl border border-border my-4">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted/40 text-foreground">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">Grass</th>
+                    <th className="px-4 py-3 font-semibold">Leaf width</th>
+                    <th className="px-4 py-3 font-semibold">Growth type</th>
+                    <th className="px-4 py-3 font-semibold">Shade tolerance</th>
+                    <th className="px-4 py-3 font-semibold">Watering needs</th>
+                  </tr>
+                </thead>
+                <tbody className="text-foreground/90">
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-3 font-medium">Buffalo (Sir Walter)</td>
+                    <td className="px-4 py-3">Broad (8–10 mm)</td>
+                    <td className="px-4 py-3">Warm-season, runners (stolons)</td>
+                    <td className="px-4 py-3">High (4–5 hrs sun)</td>
+                    <td className="px-4 py-3">Low–moderate</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-3 font-medium">Couch</td>
+                    <td className="px-4 py-3">Very fine (1–3 mm)</td>
+                    <td className="px-4 py-3">Warm-season, runners</td>
+                    <td className="px-4 py-3">Low (full sun)</td>
+                    <td className="px-4 py-3">Moderate</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-3 font-medium">Kikuyu</td>
+                    <td className="px-4 py-3">Medium (4–6 mm)</td>
+                    <td className="px-4 py-3">Warm-season, vigorous runners</td>
+                    <td className="px-4 py-3">Low–moderate</td>
+                    <td className="px-4 py-3">Moderate</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-3 font-medium">Zoysia (Sir Grange)</td>
+                    <td className="px-4 py-3">Fine (2–3 mm)</td>
+                    <td className="px-4 py-3">Warm-season, dense runners</td>
+                    <td className="px-4 py-3">Moderate</td>
+                    <td className="px-4 py-3">Low</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-3 font-medium">Tall Fescue</td>
+                    <td className="px-4 py-3">Coarse (5–10 mm)</td>
+                    <td className="px-4 py-3">Cool-season, clumping (no runners)</td>
+                    <td className="px-4 py-3">High</td>
+                    <td className="px-4 py-3">High</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             <h2 className="text-3xl font-bold text-foreground pt-6">1. Buffalo (including Sir Walter)</h2>
             <GrassImage src={buffaloImg} alt="Close-up of soft-leaf Buffalo grass blades" caption="How to spot it: broad, flat leaf blades with rounded tips and a slightly blue-green tint." />
             <p>
