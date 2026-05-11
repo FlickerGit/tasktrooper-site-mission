@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LawnMowerGame from "./pages/LawnMowerGame";
 import Unsubscribe from "./pages/Unsubscribe";
+import Blog from "./pages/Blog";
+import BlogPostGrass from "./pages/blog/TypesOfGrassInAustralia";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/game" element={<LawnMowerGame />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/types-of-grass-in-australia" element={<BlogPostGrass />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
