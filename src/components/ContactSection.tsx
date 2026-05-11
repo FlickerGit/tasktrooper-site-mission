@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useState } from "react";
+import { useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,9 +20,20 @@ const ContactSection = () => {
   const { toast } = useToast();
 
   const [submitting, setSubmitting] = useState(false);
+  const [website, setWebsite] = useState(""); // honeypot
+  const formLoadedAt = useRef<number>(Date.now());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Spam protection: honeypot + minimum form fill time (3s)
+    if (website.trim() !== "" || Date.now() - formLoadedAt.current < 3000) {
+      toast({
+        title: "Message Sent",
+        description: "Thank you for your message. We'll get back to you soon!",
+      });
+      setFormData({ fullName: "", email: "", message: "" });
+      return;
+    }
     setSubmitting(true);
     const id = crypto.randomUUID();
     const { error } = await supabase.from("contact_messages").insert({
@@ -138,6 +150,18 @@ const ContactSection = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Honeypot field — hidden from users, bots fill it */}
+                <div aria-hidden="true" className="absolute left-[-9999px] top-[-9999px] h-0 w-0 overflow-hidden" tabIndex={-1}>
+                  <Label htmlFor="contact-website">Website</Label>
+                  <Input
+                    id="contact-website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="contactName">Full Name *</Label>
                   <Input
