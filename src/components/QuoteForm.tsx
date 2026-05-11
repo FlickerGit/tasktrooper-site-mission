@@ -21,6 +21,8 @@ const QuoteForm = () => {
   const { toast } = useToast();
 
   const [submitting, setSubmitting] = useState(false);
+  const [website, setWebsite] = useState(""); // honeypot
+  const formLoadedAt = useRef<number>(Date.now());
   const [addressSuggestions, setAddressSuggestions] = useState<Array<{ display_name: string; place_id: number }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingAddress, setLoadingAddress] = useState(false);
@@ -57,6 +59,23 @@ const QuoteForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Spam protection: honeypot + minimum form fill time (3s)
+    if (website.trim() !== "" || Date.now() - formLoadedAt.current < 3000) {
+      toast({
+        title: "Quote Request Submitted",
+        description: "We'll get back to you within 24 hours with a detailed quote.",
+      });
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        address: "",
+        serviceType: "",
+        description: "",
+        preferredDate: ""
+      });
+      return;
+    }
     setSubmitting(true);
     const id = crypto.randomUUID();
     const { error } = await supabase.from("quote_requests").insert({
@@ -142,6 +161,18 @@ const QuoteForm = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Honeypot field — hidden from users, bots fill it */}
+                <div aria-hidden="true" className="absolute left-[-9999px] top-[-9999px] h-0 w-0 overflow-hidden" tabIndex={-1}>
+                  <Label htmlFor="quote-website">Website</Label>
+                  <Input
+                    id="quote-website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name *</Label>
