@@ -10,6 +10,11 @@ import couchImg from "@/assets/grass-couch.jpg";
 import kikuyuImg from "@/assets/grass-kikuyu.jpg";
 import zoysiaImg from "@/assets/grass-zoysia.jpg";
 import fescueImg from "@/assets/grass-fescue.jpg";
+import buffaloRoots from "@/assets/grass-buffalo-roots.jpg";
+import couchRoots from "@/assets/grass-couch-roots.jpg";
+import kikuyuRoots from "@/assets/grass-kikuyu-roots.jpg";
+import zoysiaRoots from "@/assets/grass-zoysia-roots.jpg";
+import fescueRoots from "@/assets/grass-fescue-roots.jpg";
 
 const GrassImage = ({ src, alt, caption }: { src: string; alt: string; caption: string }) => (
   <figure className="my-6">
@@ -154,6 +159,7 @@ const TypesOfGrassInAustralia = () => {
 
             <h2 className="text-3xl font-bold text-foreground pt-6">1. Buffalo (including Sir Walter)</h2>
             <GrassImage src={buffaloImg} alt="Close-up of soft-leaf Buffalo grass blades" caption="How to spot it: broad, flat leaf blades with rounded tips and a slightly blue-green tint." />
+            <GrassImage src={buffaloRoots} alt="Cross-section showing Buffalo grass root structure" caption="Roots: thick surface stolons (runners) with moderately deep fibrous roots reaching around 10–15 cm." />
             <p>
               Soft-leaf Buffalo, and especially the Sir Walter variety, has become Australia's go-to family lawn — and for good reason. It's shade tolerant (handling around 4–5 hours of direct sun a day), reasonably drought hardy once established, and gentle enough underfoot for kids and pets.
             </p>
@@ -163,6 +169,7 @@ const TypesOfGrassInAustralia = () => {
 
             <h2 className="text-3xl font-bold text-foreground pt-6">2. Couch</h2>
             <GrassImage src={couchImg} alt="Close-up of fine-bladed Couch grass" caption="How to spot it: very fine, narrow, sharply pointed bright green blades — that classic cricket-pitch look." />
+            <GrassImage src={couchRoots} alt="Cross-section showing Couch grass root structure" caption="Roots: aggressive stolons above ground plus underground rhizomes, with deep fibrous roots to 20–30 cm." />
             <p>
               Couch is the classic fine-bladed Australian lawn — think backyard cricket pitches and sun-soaked front yards. It loves full sun, recovers quickly from wear, and gives you that crisp, manicured look when it's kept short.
             </p>
@@ -172,6 +179,7 @@ const TypesOfGrassInAustralia = () => {
 
             <h2 className="text-3xl font-bold text-foreground pt-6">3. Kikuyu</h2>
             <GrassImage src={kikuyuImg} alt="Close-up of Kikuyu grass with visible runners" caption="How to spot it: medium-width apple-green blades with obvious runners (stolons) creeping along the surface." />
+            <GrassImage src={kikuyuRoots} alt="Cross-section showing Kikuyu grass root structure" caption="Roots: very thick stolons and rhizomes feeding a dense, deep root system — part of why Kikuyu spreads so fast." />
             <p>
               Kikuyu is the workhorse — fast growing, tough as nails, and great for big open spaces, sports fields and high-traffic family lawns. It greens up beautifully in spring and bounces back from damage faster than just about anything else.
             </p>
@@ -181,6 +189,7 @@ const TypesOfGrassInAustralia = () => {
 
             <h2 className="text-3xl font-bold text-foreground pt-6">4. Zoysia</h2>
             <GrassImage src={zoysiaImg} alt="Close-up of dense Zoysia grass" caption="How to spot it: very fine, soft, dark green blades packed tightly together — feels like a thick carpet underfoot." />
+            <GrassImage src={zoysiaRoots} alt="Cross-section showing Zoysia grass root structure" caption="Roots: dense stolons and rhizomes with very fine, deep fibrous roots — the secret to its low water use." />
             <p>
               Zoysia (varieties like Sir Grange and Empire) is the premium, low-maintenance option you'll see on a lot of newer Northern Beaches builds. It's slow growing, dense enough to crowd out most weeds on its own, and uses noticeably less water than Couch or Kikuyu.
             </p>
@@ -190,6 +199,7 @@ const TypesOfGrassInAustralia = () => {
 
             <h2 className="text-3xl font-bold text-foreground pt-6">5. Tall Fescue</h2>
             <GrassImage src={fescueImg} alt="Close-up of upright Tall Fescue grass blades" caption="How to spot it: upright, coarse, deep green blades that grow in clumps rather than spreading by runners." />
+            <GrassImage src={fescueRoots} alt="Cross-section showing Tall Fescue root structure" caption="Roots: no runners or rhizomes — instead a deep, bunch-type fibrous root system reaching 40–60 cm to chase moisture." />
             <p>
               Fescue is the main cool-season grass you'll see around Sydney, especially in shaded gardens or properties where the owner wants a green lawn through winter. It has a lovely deep colour, but it pays for that with much higher water needs once summer hits.
             </p>
