@@ -6,6 +6,7 @@ type AuthCtx = {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isStaff: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
 };
@@ -14,6 +15,7 @@ const AuthContext = createContext<AuthCtx>({
   user: null,
   session: null,
   isAdmin: false,
+  isStaff: false,
   loading: true,
   signOut: async () => {},
 });
@@ -22,6 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isStaff, setIsStaff] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,16 +33,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(sess?.user ?? null);
       if (sess?.user) {
         setTimeout(async () => {
-          const { data } = await supabase
+          const [{ data: adminRow }, { data: staffRow }] = await Promise.all([
+            supabase
             .from("user_roles")
             .select("role")
             .eq("user_id", sess.user.id)
             .eq("role", "admin")
-            .maybeSingle();
-          setIsAdmin(!!data);
+              .maybeSingle(),
+            supabase
+              .from("staff_members")
+              .select("user_id")
+              .eq("user_id", sess.user.id)
+              .maybeSingle(),
+          ]);
+          setIsAdmin(!!adminRow);
+          setIsStaff(!!staffRow);
         }, 0);
       } else {
         setIsAdmin(false);
+        setIsStaff(false);
       }
     });
 
@@ -55,6 +67,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .eq("role", "admin")
           .maybeSingle()
           .then(({ data }) => setIsAdmin(!!data));
+        supabase
+          .from("staff_members")
+          .select("user_id")
+          .eq("user_id", sess.user.id)
+          .maybeSingle()
+          .then(({ data }) => setIsStaff(!!data));
       }
     });
 
@@ -66,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isStaff, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
