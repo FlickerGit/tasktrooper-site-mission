@@ -10,6 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { notify, type TimeWindow } from "@/lib/jobs";
 
+type PlaceAutocompleteSuggestion = {
+  placePrediction?: {
+    text?: { text?: string };
+    placeId?: string;
+  };
+};
+
 const QuoteForm = () => {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -59,9 +66,9 @@ const QuoteForm = () => {
         });
         if (res.ok) {
           const data = await res.json();
-          const suggestions = (data.suggestions ?? [])
-            .filter((s: any) => s.placePrediction)
-            .map((s: any) => ({
+          const suggestions = ((data.suggestions ?? []) as PlaceAutocompleteSuggestion[])
+            .filter((s) => s.placePrediction)
+            .map((s) => ({
               description: s.placePrediction.text?.text ?? "",
               placeId: s.placePrediction.placeId ?? "",
             }));
@@ -164,7 +171,7 @@ const QuoteForm = () => {
     // Forward to Zapier through the backend webhook so JSON arrives reliably.
     try {
       const { error: zapError } = await supabase.functions.invoke("zapier-quote-webhook", {
-        body: JSON.stringify({
+        body: {
           id,
           fullName: formData.fullName,
           email: formData.email,
@@ -176,7 +183,7 @@ const QuoteForm = () => {
           preferredTimeWindow: formData.preferredTimeWindow || "",
           triggered_at: new Date().toISOString(),
           source: "tasktroopers-quote-form",
-        }),
+        },
       });
       if (zapError) {
         console.error("Zapier webhook failed:", zapError);
