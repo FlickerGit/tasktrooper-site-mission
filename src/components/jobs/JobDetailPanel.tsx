@@ -73,6 +73,9 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
   const [subtotalInput, setSubtotalInput] = useState<string>(
     job.subtotal != null ? String(job.subtotal) : "",
   );
+  const [serviceDate, setServiceDate] = useState<string>(job.service_date ?? "");
+  const [productService, setProductService] = useState<string>(job.product_service ?? "");
+  const [quoteDescription, setQuoteDescription] = useState<string>(job.quote_description ?? "");
   const [scheduledDate, setScheduledDate] = useState(job.scheduled_date ?? "");
   const [scheduledTime, setScheduledTime] = useState(job.scheduled_time ?? "");
   const [scheduledWindow, setScheduledWindow] = useState<TimeWindow | "">(
@@ -93,12 +96,15 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
     setAdminNotes(job.admin_notes ?? "");
     setInternalNotes(job.internal_notes ?? "");
     setSubtotalInput(job.subtotal != null ? String(job.subtotal) : "");
+    setServiceDate(job.service_date ?? "");
+    setProductService(job.product_service ?? "");
+    setQuoteDescription(job.quote_description ?? "");
     setScheduledDate(job.scheduled_date ?? "");
     setScheduledTime(job.scheduled_time ?? "");
     setScheduledWindow(job.scheduled_window ?? "");
     setScheduleMode(job.scheduled_window && !job.scheduled_time ? "window" : "time");
     setAssignedStaff(job.assigned_staff_id ?? "");
-  }, [job.id, job.admin_notes, job.internal_notes, job.subtotal, job.scheduled_date, job.scheduled_time, job.scheduled_window, job.assigned_staff_id]);
+  }, [job.id, job.admin_notes, job.internal_notes, job.subtotal, job.service_date, job.product_service, job.quote_description, job.scheduled_date, job.scheduled_time, job.scheduled_window, job.assigned_staff_id]);
 
   // Load related data
   useEffect(() => {
@@ -161,7 +167,14 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
     }
     const q = calcQuote(sub);
     return updateJob(
-      { subtotal: q.subtotal, gst: q.gst, total: q.total },
+      {
+        subtotal: q.subtotal,
+        gst: q.gst,
+        total: q.total,
+        service_date: serviceDate || null,
+        product_service: productService || null,
+        quote_description: quoteDescription || null,
+      },
       "Quote saved",
     );
   };
@@ -188,6 +201,9 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
               templateData: {
                 fullName: job.full_name,
                 serviceType: job.service_type,
+                serviceDate: serviceDate || job.scheduled_date || "",
+                productService: productService || "",
+                description: quoteDescription || "",
                 subtotal: formatAUD(job.subtotal),
                 gst: formatAUD(job.gst),
                 total: formatAUD(job.total),
@@ -336,6 +352,57 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
           <CardContent className="space-y-4">
             {role === "admin" ? (
               <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="service-date">Service date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="service-date"
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-between bg-background font-normal",
+                            !serviceDate && "text-muted-foreground",
+                          )}
+                        >
+                          {serviceDate ? format(parseISO(serviceDate), "PPP") : "Pick a date (optional)"}
+                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarPicker
+                          mode="single"
+                          selected={serviceDate ? parseISO(serviceDate) : undefined}
+                          onSelect={(d) => setServiceDate(d ? format(d, "yyyy-MM-dd") : "")}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground mt-1">Leave blank until an agreed time is chosen.</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="product-service">Product / Service</Label>
+                    <Input
+                      id="product-service"
+                      value={productService}
+                      onChange={(e) => setProductService(e.target.value)}
+                      placeholder="e.g. Hedge trimming + green waste removal"
+                      className="bg-background"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="quote-description">Description</Label>
+                  <Textarea
+                    id="quote-description"
+                    value={quoteDescription}
+                    onChange={(e) => setQuoteDescription(e.target.value)}
+                    placeholder="Detailed description of what this quote covers…"
+                    className="bg-background min-h-[80px]"
+                  />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <Label htmlFor="subtotal">Subtotal (ex GST)</Label>
@@ -380,6 +447,19 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                   <p className="text-muted-foreground">Your quote will appear here once we've prepared it.</p>
                 ) : (
                   <>
+                    {(job.service_date || job.product_service || job.quote_description) && (
+                      <div className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
+                        {job.product_service && (
+                          <div><span className="text-muted-foreground">Product / Service:</span> <span className="text-foreground">{job.product_service}</span></div>
+                        )}
+                        {job.service_date && (
+                          <div><span className="text-muted-foreground">Service date:</span> <span className="text-foreground">{format(parseISO(job.service_date), "PPP")}</span></div>
+                        )}
+                        {job.quote_description && (
+                          <div className="whitespace-pre-wrap"><span className="text-muted-foreground">Description:</span> <span className="text-foreground">{job.quote_description}</span></div>
+                        )}
+                      </div>
+                    )}
                     <div className="flex justify-between"><span>Subtotal</span><span>{formatAUD(job.subtotal)}</span></div>
                     <div className="flex justify-between"><span>GST (10%)</span><span>{formatAUD(job.gst)}</span></div>
                     <Separator />
