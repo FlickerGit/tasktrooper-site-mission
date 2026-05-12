@@ -80,8 +80,8 @@ const QuoteForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Spam protection: honeypot + minimum form fill time (3s)
-    if (website.trim() !== "" || Date.now() - formLoadedAt.current < 3000) {
+    // Spam protection: honeypot field only. Avoid silently dropping fast legitimate/test submissions.
+    if (website.trim() !== "") {
       toast({
         title: "Quote Request Submitted",
         description: "We'll get back to you within 24 hours with a detailed quote.",
@@ -161,13 +161,9 @@ const QuoteForm = () => {
       },
     });
 
-    // Forward to Zapier — fire and forget
-    // Forward to Zapier — direct client call with no-cors (Zapier's recommended pattern)
+    // Forward to Zapier through the backend webhook so JSON arrives reliably.
     try {
-      await fetch("https://hooks.zapier.com/hooks/catch/27569073/4yfrioj/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        mode: "no-cors",
+      const { error: zapError } = await supabase.functions.invoke("zapier-quote-webhook", {
         body: JSON.stringify({
           id,
           fullName: formData.fullName,
@@ -182,9 +178,13 @@ const QuoteForm = () => {
           source: "tasktroopers-quote-form",
         }),
       });
-      console.log("Zapier webhook fired");
+      if (zapError) {
+        console.error("Zapier webhook failed:", zapError);
+      } else {
+        console.log("Zapier webhook fired");
+      }
     } catch (err) {
-      console.error("Zapier webhook fetch failed:", err);
+      console.error("Zapier webhook invoke failed:", err);
     }
     toast({
       title: "Quote Request Submitted",
