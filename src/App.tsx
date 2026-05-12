@@ -10,6 +10,7 @@ import Unsubscribe from "./pages/Unsubscribe";
 import Blog from "./pages/Blog";
 import BlogPostGrass from "./pages/blog/TypesOfGrassInAustralia";
 import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import { AuthProvider } from "./hooks/use-auth";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/game" element={<LawnMowerGame />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/blog" element={<Blog />} />
