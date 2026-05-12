@@ -28,7 +28,7 @@ const QuoteForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [website, setWebsite] = useState(""); // honeypot
   const formLoadedAt = useRef<number>(Date.now());
-  const [addressSuggestions, setAddressSuggestions] = useState<Array<{ display_name: string; place_id: number }>>([]);
+  const [addressSuggestions, setAddressSuggestions] = useState<Array<{ description: string; placeId: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const addressDebounceRef = useRef<number | null>(null);
@@ -45,11 +45,27 @@ const QuoteForm = () => {
     setLoadingAddress(true);
     addressDebounceRef.current = window.setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=au&addressdetails=1&limit=6&q=${encodeURIComponent(query)}`;
-        const res = await fetch(url, { headers: { "Accept-Language": "en-AU" } });
+        const res = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": "AIzaSyDA-u_jDSyq8Bgd3o_Y7sI_ySBcHp0b0VQ",
+          },
+          body: JSON.stringify({
+            input: query,
+            includedRegionCodes: ["au"],
+            languageCode: "en-AU",
+          }),
+        });
         if (res.ok) {
           const data = await res.json();
-          setAddressSuggestions(data);
+          const suggestions = (data.suggestions ?? [])
+            .filter((s: any) => s.placePrediction)
+            .map((s: any) => ({
+              description: s.placePrediction.text?.text ?? "",
+              placeId: s.placePrediction.placeId ?? "",
+            }));
+          setAddressSuggestions(suggestions);
         }
       } catch {
         // silent — fallback to manual entry
@@ -165,8 +181,8 @@ const QuoteForm = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const selectAddress = (display_name: string) => {
-    setFormData(prev => ({ ...prev, address: display_name }));
+  const selectAddress = (description: string) => {
+    setFormData(prev => ({ ...prev, address: description }));
     setAddressSuggestions([]);
     setShowSuggestions(false);
   };
@@ -285,21 +301,21 @@ const QuoteForm = () => {
                         )}
                         {addressSuggestions.map((s) => (
                           <button
-                            key={s.place_id}
+                            key={s.placeId}
                             type="button"
                             onMouseDown={(e) => {
                               e.preventDefault();
-                              selectAddress(s.display_name);
+                              selectAddress(s.description);
                             }}
                             className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
                           >
-                            {s.display_name}
+                            {s.description}
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">Suggestions powered by OpenStreetMap. Australian addresses only.</p>
+                  <p className="text-xs text-muted-foreground">Suggestions powered by Google. Australian addresses only.</p>
                 </div>
 
                 <div className="space-y-2">
