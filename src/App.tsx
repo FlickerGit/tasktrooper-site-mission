@@ -11,6 +11,8 @@ import Blog from "./pages/Blog";
 import BlogPostGrass from "./pages/blog/TypesOfGrassInAustralia";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import Dashboard from "./pages/Dashboard";
+import Staff from "./pages/Staff";
 import { AuthProvider } from "./hooks/use-auth";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/staff" element={<Staff />} />
             <Route path="/game" element={<LawnMowerGame />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/blog" element={<Blog />} />
