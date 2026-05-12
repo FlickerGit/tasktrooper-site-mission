@@ -9,6 +9,8 @@ import LawnMowerGame from "./pages/LawnMowerGame";
 import Unsubscribe from "./pages/Unsubscribe";
 import Blog from "./pages/Blog";
 import BlogPostGrass from "./pages/blog/TypesOfGrassInAustralia";
+import Auth from "./pages/Auth";
+import { AuthProvider } from "./hooks/use-auth";
 
 const queryClient = new QueryClient();
 
@@ -18,15 +20,18 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/game" element={<LawnMowerGame />} />
-          <Route path="/unsubscribe" element={<Unsubscribe />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/types-of-grass-in-australia" element={<BlogPostGrass />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/game" element={<LawnMowerGame />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/types-of-grass-in-australia" element={<BlogPostGrass />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
