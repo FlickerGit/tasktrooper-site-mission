@@ -1,4 +1,8 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -7,6 +11,7 @@ Deno.serve(async (req) => {
 
   try {
     const webhookUrl = Deno.env.get('ZAPIER_QUOTE_WEBHOOK_URL');
+    console.log('zapier-quote-webhook invoked. Webhook configured:', Boolean(webhookUrl));
     if (!webhookUrl) {
       return new Response(JSON.stringify({ error: 'ZAPIER_QUOTE_WEBHOOK_URL not configured' }), {
         status: 500,
@@ -15,6 +20,7 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
+    console.log('Forwarding payload to Zapier:', JSON.stringify(payload));
 
     const zapRes = await fetch(webhookUrl, {
       method: 'POST',
