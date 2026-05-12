@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, Shield } from "lucide-react";
+import { Menu, LogOut, Shield, ClipboardList, Hammer } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isStaff, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -40,6 +40,18 @@ const Header = () => {
         <div className="hidden md:flex items-center space-x-3">
           {user ? (
             <>
+              <Link to="/dashboard">
+                <Button variant="ghost" className="text-foreground">
+                  <ClipboardList className="h-4 w-4 mr-2" /> My Jobs
+                </Button>
+              </Link>
+              {isStaff && !isAdmin && (
+                <Link to="/staff">
+                  <Button variant="ghost" className="text-foreground">
+                    <Hammer className="h-4 w-4 mr-2" /> Staff
+                  </Button>
+                </Link>
+              )}
               {isAdmin && (
                 <Link to="/admin">
                   <Button variant="ghost" className="text-foreground">
@@ -82,6 +94,10 @@ const Header = () => {
             <div className="flex flex-col space-y-2 pt-4 border-t border-border">
               {user ? (
                 <>
+                  <Link to="/dashboard"><Button variant="ghost" className="text-foreground justify-start w-full">My Jobs</Button></Link>
+                  {isStaff && !isAdmin && (
+                    <Link to="/staff"><Button variant="ghost" className="text-foreground justify-start w-full">Staff</Button></Link>
+                  )}
                   {isAdmin && (
                     <Link to="/admin"><Button variant="ghost" className="text-foreground justify-start w-full">Admin</Button></Link>
                   )}
