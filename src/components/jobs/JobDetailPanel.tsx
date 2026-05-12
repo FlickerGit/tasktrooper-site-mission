@@ -415,16 +415,55 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                     </Popover>
                     <p className="text-xs text-muted-foreground mt-1">Leave blank until an agreed time is chosen.</p>
                   </div>
-                  <div>
-                    <Label htmlFor="product-service">Product / Service</Label>
-                    <Input
-                      id="product-service"
-                      value={productService}
-                      onChange={(e) => setProductService(e.target.value)}
-                      placeholder="e.g. Hedge trimming + green waste removal"
-                      className="bg-background"
-                    />
-                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Products / Services</Label>
+                  {quoteItems.map((item, idx) => (
+                    <div key={idx} className="grid grid-cols-[1fr_140px_auto] gap-2 items-start">
+                      <Input
+                        value={item.description}
+                        onChange={(e) => {
+                          const next = [...quoteItems];
+                          next[idx] = { ...next[idx], description: e.target.value };
+                          setQuoteItems(next);
+                          if (idx === 0) setProductService(e.target.value);
+                        }}
+                        placeholder={idx === 0 ? "e.g. Hedge trimming + green waste removal" : "Additional product / service"}
+                        className="bg-background"
+                      />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={item.amount}
+                        onChange={(e) => {
+                          const next = [...quoteItems];
+                          next[idx] = { ...next[idx], amount: e.target.value };
+                          setQuoteItems(next);
+                        }}
+                        placeholder="Amount (ex GST)"
+                        className="bg-background"
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        disabled={quoteItems.length === 1}
+                        onClick={() => setQuoteItems(quoteItems.filter((_, i) => i !== idx))}
+                        aria-label="Remove product"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setQuoteItems([...quoteItems, { description: "", amount: "" }])}
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Add product
+                  </Button>
                 </div>
                 <div>
                   <Label htmlFor="quote-description">Description</Label>
@@ -436,29 +475,33 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                     className="bg-background min-h-[80px]"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="customer-message">Message to client</Label>
+                  <Textarea
+                    id="customer-message"
+                    value={customerMessage}
+                    onChange={(e) => setCustomerMessage(e.target.value)}
+                    placeholder="Personal message included in the quote email to the client…"
+                    className="bg-background min-h-[80px]"
+                  />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <Label htmlFor="subtotal">Subtotal (ex GST)</Label>
-                    <Input
-                      id="subtotal"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={subtotalInput}
-                      onChange={(e) => setSubtotalInput(e.target.value)}
-                      className="bg-background"
-                    />
+                    <Label>Subtotal (ex GST)</Label>
+                    <div className="h-10 flex items-center px-3 rounded-md border border-border bg-muted/30 text-sm">
+                      {formatAUD(quoteItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0))}
+                    </div>
                   </div>
                   <div>
                     <Label>GST (10%)</Label>
                     <div className="h-10 flex items-center px-3 rounded-md border border-border bg-muted/30 text-sm">
-                      {formatAUD(subtotalInput ? calcQuote(parseFloat(subtotalInput) || 0).gst : null)}
+                      {formatAUD(calcQuote(quoteItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0)).gst)}
                     </div>
                   </div>
                   <div>
                     <Label>Total inc. GST</Label>
                     <div className="h-10 flex items-center px-3 rounded-md border border-border bg-muted/30 text-sm font-semibold text-primary">
-                      {formatAUD(subtotalInput ? calcQuote(parseFloat(subtotalInput) || 0).total : null)}
+                      {formatAUD(calcQuote(quoteItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0)).total)}
                     </div>
                   </div>
                 </div>
