@@ -9,6 +9,7 @@ import { JobDetailPanel } from "@/components/jobs/JobDetailPanel";
 import { Loader2 } from "lucide-react";
 import type { Job } from "@/lib/jobs";
 import { Button } from "@/components/ui/button";
+import { ContactDetailsDialog } from "@/components/ContactDetailsDialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -59,9 +60,12 @@ const Dashboard = () => {
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1">My Jobs</h1>
               <p className="text-muted-foreground">Track your requests, approve quotes and view confirmed bookings.</p>
             </div>
-            <Button onClick={() => navigate("/#quote")} className="bg-gradient-primary hover:opacity-90">
-              Request a new quote
-            </Button>
+            <div className="flex gap-2 flex-wrap">
+              <ContactDetailsDialog />
+              <Button onClick={() => navigate("/#quote")} className="bg-gradient-primary hover:opacity-90">
+                Request a new quote
+              </Button>
+            </div>
           </div>
 
           {loading ? (
