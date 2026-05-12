@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -77,6 +78,9 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
   const [scheduledWindow, setScheduledWindow] = useState<TimeWindow | "">(
     job.scheduled_window ?? "",
   );
+  const [scheduleMode, setScheduleMode] = useState<"time" | "window">(
+    job.scheduled_window && !job.scheduled_time ? "window" : "time",
+  );
   const [assignedStaff, setAssignedStaff] = useState<string>(job.assigned_staff_id ?? "");
 
   // Customer reject reason
@@ -92,6 +96,7 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
     setScheduledDate(job.scheduled_date ?? "");
     setScheduledTime(job.scheduled_time ?? "");
     setScheduledWindow(job.scheduled_window ?? "");
+    setScheduleMode(job.scheduled_window && !job.scheduled_time ? "window" : "time");
     setAssignedStaff(job.assigned_staff_id ?? "");
   }, [job.id, job.admin_notes, job.internal_notes, job.subtotal, job.scheduled_date, job.scheduled_time, job.scheduled_window, job.assigned_staff_id]);
 
@@ -427,6 +432,25 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
           <Card>
             <CardHeader><CardTitle className="text-base">Scheduling</CardTitle></CardHeader>
             <CardContent className="space-y-3">
+              <RadioGroup
+                value={scheduleMode}
+                onValueChange={(v) => {
+                  const mode = v as "time" | "window";
+                  setScheduleMode(mode);
+                  if (mode === "time") setScheduledWindow("");
+                  else setScheduledTime("");
+                }}
+                className="flex gap-6"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="time" id="mode-time" />
+                  <Label htmlFor="mode-time" className="font-normal cursor-pointer">Specific time</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="window" id="mode-window" />
+                  <Label htmlFor="mode-window" className="font-normal cursor-pointer">Time window</Label>
+                </div>
+              </RadioGroup>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <Label htmlFor="sched-date">Date</Label>
@@ -458,8 +482,8 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                 </div>
                 <div>
                   <Label htmlFor="sched-time">Time</Label>
-                  <Select value={scheduledTime || undefined} onValueChange={(v) => setScheduledTime(v)}>
-                    <SelectTrigger id="sched-time" className="bg-background">
+                  <Select value={scheduledTime || undefined} onValueChange={(v) => setScheduledTime(v)} disabled={scheduleMode !== "time"}>
+                    <SelectTrigger id="sched-time" className="bg-background" disabled={scheduleMode !== "time"}>
                       <SelectValue placeholder="Select time" />
                     </SelectTrigger>
                     <SelectContent className="max-h-64">
@@ -480,8 +504,8 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                 </div>
                 <div>
                   <Label htmlFor="sched-win">Window</Label>
-                  <Select value={scheduledWindow} onValueChange={(v) => setScheduledWindow(v as TimeWindow)}>
-                    <SelectTrigger id="sched-win" className="bg-background"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <Select value={scheduledWindow} onValueChange={(v) => setScheduledWindow(v as TimeWindow)} disabled={scheduleMode !== "window"}>
+                    <SelectTrigger id="sched-win" className="bg-background" disabled={scheduleMode !== "window"}><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="morning">Morning</SelectItem>
                       <SelectItem value="afternoon">Afternoon</SelectItem>
