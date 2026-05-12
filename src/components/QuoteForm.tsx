@@ -162,10 +162,13 @@ const QuoteForm = () => {
     });
 
     // Forward to Zapier — fire and forget
-    // Forward to Zapier via secure edge function
+    // Forward to Zapier — direct client call with no-cors (Zapier's recommended pattern)
     try {
-      const { data: zapData, error: zapError } = await supabase.functions.invoke("zapier-quote-webhook", {
-        body: {
+      await fetch("https://hooks.zapier.com/hooks/catch/27569073/4yfrioj/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        mode: "no-cors",
+        body: JSON.stringify({
           id,
           fullName: formData.fullName,
           email: formData.email,
@@ -175,15 +178,13 @@ const QuoteForm = () => {
           description: formData.description,
           preferredDate: formData.preferredDate || "",
           preferredTimeWindow: formData.preferredTimeWindow || "",
-        },
+          triggered_at: new Date().toISOString(),
+          source: "tasktroopers-quote-form",
+        }),
       });
-      if (zapError) {
-        console.error("Zapier webhook invoke error:", zapError);
-      } else {
-        console.log("Zapier webhook invoked successfully:", zapData);
-      }
+      console.log("Zapier webhook fired");
     } catch (err) {
-      console.error("Zapier webhook threw:", err);
+      console.error("Zapier webhook fetch failed:", err);
     }
     toast({
       title: "Quote Request Submitted",
