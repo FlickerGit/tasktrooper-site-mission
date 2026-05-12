@@ -523,16 +523,31 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                   <p className="text-muted-foreground">Your quote will appear here once we've prepared it.</p>
                 ) : (
                   <>
-                    {(job.service_date || job.product_service || job.quote_description) && (
+                    {(job.service_date || job.product_service || job.quote_description || (Array.isArray((job as any).quote_items) && (job as any).quote_items.length > 0) || job.customer_message) && (
                       <div className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
-                        {job.product_service && (
+                        {Array.isArray((job as any).quote_items) && (job as any).quote_items.length > 0 ? (
+                          <div>
+                            <div className="text-muted-foreground mb-1">Products / Services:</div>
+                            <ul className="space-y-1">
+                              {((job as any).quote_items as { description: string; amount: number }[]).map((it, i) => (
+                                <li key={i} className="flex justify-between gap-3">
+                                  <span className="text-foreground">{it.description}</span>
+                                  <span className="text-foreground">{formatAUD(Number(it.amount))}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : job.product_service ? (
                           <div><span className="text-muted-foreground">Product / Service:</span> <span className="text-foreground">{job.product_service}</span></div>
-                        )}
+                        ) : null}
                         {job.service_date && (
                           <div><span className="text-muted-foreground">Service date:</span> <span className="text-foreground">{format(parseISO(job.service_date), "PPP")}</span></div>
                         )}
                         {job.quote_description && (
                           <div className="whitespace-pre-wrap"><span className="text-muted-foreground">Description:</span> <span className="text-foreground">{job.quote_description}</span></div>
+                        )}
+                        {job.customer_message && (
+                          <div className="whitespace-pre-wrap rounded-md border border-primary/30 bg-primary/5 p-2 mt-2"><span className="text-muted-foreground">Message:</span> <span className="text-foreground">{job.customer_message}</span></div>
                         )}
                       </div>
                     )}
