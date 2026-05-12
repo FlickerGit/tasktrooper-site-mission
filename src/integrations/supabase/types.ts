@@ -239,6 +239,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           customer_id: string | null
+          customer_message: string | null
           description: string
           email: string
           full_name: string
@@ -255,6 +256,7 @@ export type Database = {
           product_service: string | null
           quote_decision_at: string | null
           quote_description: string | null
+          quote_items: Json
           quote_rejection_reason: string | null
           quote_sent_at: string | null
           scheduled_date: string | null
@@ -274,6 +276,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           customer_id?: string | null
+          customer_message?: string | null
           description: string
           email: string
           full_name: string
@@ -290,6 +293,7 @@ export type Database = {
           product_service?: string | null
           quote_decision_at?: string | null
           quote_description?: string | null
+          quote_items?: Json
           quote_rejection_reason?: string | null
           quote_sent_at?: string | null
           scheduled_date?: string | null
@@ -309,6 +313,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           customer_id?: string | null
+          customer_message?: string | null
           description?: string
           email?: string
           full_name?: string
@@ -325,6 +330,7 @@ export type Database = {
           product_service?: string | null
           quote_decision_at?: string | null
           quote_description?: string | null
+          quote_items?: Json
           quote_rejection_reason?: string | null
           quote_sent_at?: string | null
           scheduled_date?: string | null
