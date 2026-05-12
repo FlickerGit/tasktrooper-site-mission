@@ -26,7 +26,19 @@ import {
 } from "@/lib/jobs";
 import { StatusBadge } from "./StatusBadge";
 import { PhotoUploader } from "./PhotoUploader";
-import { Calendar, ChevronDown, ClipboardList, Loader2, Mail, MapPin, Phone, User as UserIcon } from "lucide-react";
+import { Calendar, ChevronDown, ClipboardList, Loader2, Mail, MapPin, Phone, Plus, Trash2, User as UserIcon } from "lucide-react";
+
+type QuoteItem = { description: string; amount: string };
+
+const parseQuoteItems = (raw: unknown): QuoteItem[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((it) => it && typeof it === "object")
+    .map((it: any) => ({
+      description: String(it.description ?? ""),
+      amount: it.amount != null ? String(it.amount) : "",
+    }));
+};
 
 type Role = "admin" | "customer" | "staff";
 
@@ -70,12 +82,14 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
   // Editable fields (admin only) — initialize from job
   const [adminNotes, setAdminNotes] = useState(job.admin_notes ?? "");
   const [internalNotes, setInternalNotes] = useState(job.internal_notes ?? "");
-  const [subtotalInput, setSubtotalInput] = useState<string>(
-    job.subtotal != null ? String(job.subtotal) : "",
-  );
   const [serviceDate, setServiceDate] = useState<string>(job.service_date ?? "");
   const [productService, setProductService] = useState<string>(job.product_service ?? "");
   const [quoteDescription, setQuoteDescription] = useState<string>(job.quote_description ?? "");
+  const [customerMessage, setCustomerMessage] = useState<string>(job.customer_message ?? "");
+  const [quoteItems, setQuoteItems] = useState<QuoteItem[]>(() => {
+    const items = parseQuoteItems((job as any).quote_items);
+    return items.length > 0 ? items : [{ description: "", amount: "" }];
+  });
   const [scheduledDate, setScheduledDate] = useState(job.scheduled_date ?? "");
   const [scheduledTime, setScheduledTime] = useState(job.scheduled_time ?? "");
   const [scheduledWindow, setScheduledWindow] = useState<TimeWindow | "">(
@@ -95,16 +109,18 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
   useEffect(() => {
     setAdminNotes(job.admin_notes ?? "");
     setInternalNotes(job.internal_notes ?? "");
-    setSubtotalInput(job.subtotal != null ? String(job.subtotal) : "");
     setServiceDate(job.service_date ?? "");
     setProductService(job.product_service ?? "");
     setQuoteDescription(job.quote_description ?? "");
+    setCustomerMessage(job.customer_message ?? "");
+    const items = parseQuoteItems((job as any).quote_items);
+    setQuoteItems(items.length > 0 ? items : [{ description: "", amount: "" }]);
     setScheduledDate(job.scheduled_date ?? "");
     setScheduledTime(job.scheduled_time ?? "");
     setScheduledWindow(job.scheduled_window ?? "");
     setScheduleMode(job.scheduled_window && !job.scheduled_time ? "window" : "time");
     setAssignedStaff(job.assigned_staff_id ?? "");
-  }, [job.id, job.admin_notes, job.internal_notes, job.subtotal, job.service_date, job.product_service, job.quote_description, job.scheduled_date, job.scheduled_time, job.scheduled_window, job.assigned_staff_id]);
+  }, [job.id, job.admin_notes, job.internal_notes, job.subtotal, job.service_date, job.product_service, job.quote_description, job.customer_message, job.scheduled_date, job.scheduled_time, job.scheduled_window, job.assigned_staff_id]);
 
   // Load related data
   useEffect(() => {
@@ -160,11 +176,18 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
     updateJob({ admin_notes: adminNotes, internal_notes: internalNotes }, "Notes saved");
 
   const saveQuote = () => {
-    const sub = parseFloat(subtotalInput);
-    if (isNaN(sub) || sub < 0) {
-      toast({ title: "Enter a valid subtotal", variant: "destructive" });
+    const cleanItems = quoteItems
+      .map((it) => ({ description: it.description.trim(), amount: parseFloat(it.amount) }))
+      .filter((it) => it.description || !isNaN(it.amount));
+    if (cleanItems.length === 0) {
+      toast({ title: "Add at least one product/service", variant: "destructive" });
       return;
     }
+    if (cleanItems.some((it) => isNaN(it.amount) || it.amount < 0)) {
+      toast({ title: "Each product needs a valid amount", variant: "destructive" });
+      return;
+    }
+    const sub = cleanItems.reduce((s, it) => s + it.amount, 0);
     const q = calcQuote(sub);
     return updateJob(
       {
@@ -174,6 +197,8 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
         service_date: serviceDate || null,
         product_service: productService || null,
         quote_description: quoteDescription || null,
+        customer_message: customerMessage || null,
+        quote_items: cleanItems as any,
       },
       "Quote saved",
     );
@@ -204,6 +229,14 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                 serviceDate: serviceDate || job.scheduled_date || "",
                 productService: productService || "",
                 description: quoteDescription || "",
+                customerMessage: customerMessage || "",
+                items: quoteItems
+                  .map((it) => ({
+                    description: it.description.trim(),
+                    amount: parseFloat(it.amount),
+                  }))
+                  .filter((it) => it.description && !isNaN(it.amount))
+                  .map((it) => ({ description: it.description, amount: formatAUD(it.amount) })),
                 subtotal: formatAUD(job.subtotal),
                 gst: formatAUD(job.gst),
                 total: formatAUD(job.total),
@@ -382,16 +415,55 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                     </Popover>
                     <p className="text-xs text-muted-foreground mt-1">Leave blank until an agreed time is chosen.</p>
                   </div>
-                  <div>
-                    <Label htmlFor="product-service">Product / Service</Label>
-                    <Input
-                      id="product-service"
-                      value={productService}
-                      onChange={(e) => setProductService(e.target.value)}
-                      placeholder="e.g. Hedge trimming + green waste removal"
-                      className="bg-background"
-                    />
-                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Products / Services</Label>
+                  {quoteItems.map((item, idx) => (
+                    <div key={idx} className="grid grid-cols-[1fr_140px_auto] gap-2 items-start">
+                      <Input
+                        value={item.description}
+                        onChange={(e) => {
+                          const next = [...quoteItems];
+                          next[idx] = { ...next[idx], description: e.target.value };
+                          setQuoteItems(next);
+                          if (idx === 0) setProductService(e.target.value);
+                        }}
+                        placeholder={idx === 0 ? "e.g. Hedge trimming + green waste removal" : "Additional product / service"}
+                        className="bg-background"
+                      />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={item.amount}
+                        onChange={(e) => {
+                          const next = [...quoteItems];
+                          next[idx] = { ...next[idx], amount: e.target.value };
+                          setQuoteItems(next);
+                        }}
+                        placeholder="Amount (ex GST)"
+                        className="bg-background"
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        disabled={quoteItems.length === 1}
+                        onClick={() => setQuoteItems(quoteItems.filter((_, i) => i !== idx))}
+                        aria-label="Remove product"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setQuoteItems([...quoteItems, { description: "", amount: "" }])}
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Add product
+                  </Button>
                 </div>
                 <div>
                   <Label htmlFor="quote-description">Description</Label>
@@ -403,29 +475,33 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                     className="bg-background min-h-[80px]"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="customer-message">Message to client</Label>
+                  <Textarea
+                    id="customer-message"
+                    value={customerMessage}
+                    onChange={(e) => setCustomerMessage(e.target.value)}
+                    placeholder="Personal message included in the quote email to the client…"
+                    className="bg-background min-h-[80px]"
+                  />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <Label htmlFor="subtotal">Subtotal (ex GST)</Label>
-                    <Input
-                      id="subtotal"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={subtotalInput}
-                      onChange={(e) => setSubtotalInput(e.target.value)}
-                      className="bg-background"
-                    />
+                    <Label>Subtotal (ex GST)</Label>
+                    <div className="h-10 flex items-center px-3 rounded-md border border-border bg-muted/30 text-sm">
+                      {formatAUD(quoteItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0))}
+                    </div>
                   </div>
                   <div>
                     <Label>GST (10%)</Label>
                     <div className="h-10 flex items-center px-3 rounded-md border border-border bg-muted/30 text-sm">
-                      {formatAUD(subtotalInput ? calcQuote(parseFloat(subtotalInput) || 0).gst : null)}
+                      {formatAUD(calcQuote(quoteItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0)).gst)}
                     </div>
                   </div>
                   <div>
                     <Label>Total inc. GST</Label>
                     <div className="h-10 flex items-center px-3 rounded-md border border-border bg-muted/30 text-sm font-semibold text-primary">
-                      {formatAUD(subtotalInput ? calcQuote(parseFloat(subtotalInput) || 0).total : null)}
+                      {formatAUD(calcQuote(quoteItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0)).total)}
                     </div>
                   </div>
                 </div>
@@ -447,16 +523,31 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                   <p className="text-muted-foreground">Your quote will appear here once we've prepared it.</p>
                 ) : (
                   <>
-                    {(job.service_date || job.product_service || job.quote_description) && (
+                    {(job.service_date || job.product_service || job.quote_description || (Array.isArray((job as any).quote_items) && (job as any).quote_items.length > 0) || job.customer_message) && (
                       <div className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
-                        {job.product_service && (
+                        {Array.isArray((job as any).quote_items) && (job as any).quote_items.length > 0 ? (
+                          <div>
+                            <div className="text-muted-foreground mb-1">Products / Services:</div>
+                            <ul className="space-y-1">
+                              {((job as any).quote_items as { description: string; amount: number }[]).map((it, i) => (
+                                <li key={i} className="flex justify-between gap-3">
+                                  <span className="text-foreground">{it.description}</span>
+                                  <span className="text-foreground">{formatAUD(Number(it.amount))}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : job.product_service ? (
                           <div><span className="text-muted-foreground">Product / Service:</span> <span className="text-foreground">{job.product_service}</span></div>
-                        )}
+                        ) : null}
                         {job.service_date && (
                           <div><span className="text-muted-foreground">Service date:</span> <span className="text-foreground">{format(parseISO(job.service_date), "PPP")}</span></div>
                         )}
                         {job.quote_description && (
                           <div className="whitespace-pre-wrap"><span className="text-muted-foreground">Description:</span> <span className="text-foreground">{job.quote_description}</span></div>
+                        )}
+                        {job.customer_message && (
+                          <div className="whitespace-pre-wrap rounded-md border border-primary/30 bg-primary/5 p-2 mt-2"><span className="text-muted-foreground">Message:</span> <span className="text-foreground">{job.customer_message}</span></div>
                         )}
                       </div>
                     )}
