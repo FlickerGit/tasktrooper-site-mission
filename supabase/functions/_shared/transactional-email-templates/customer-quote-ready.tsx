@@ -13,6 +13,8 @@ interface QuoteReadyProps {
   serviceDate?: string
   productService?: string
   description?: string
+  customerMessage?: string
+  items?: { description: string; amount: string }[]
   subtotal?: string
   gst?: string
   total?: string
@@ -26,6 +28,8 @@ const CustomerQuoteReadyEmail = ({
   serviceDate,
   productService,
   description,
+  customerMessage,
+  items,
   subtotal,
   gst,
   total,
@@ -44,7 +48,14 @@ const CustomerQuoteReadyEmail = ({
         </Text>
 
         <Section style={card}>
-          {productService ? (
+          {items && items.length > 0 ? (
+            <>
+              <Text style={{ ...rowText, marginBottom: '4px' }}><strong style={rowLabel}>Products / Services:</strong></Text>
+              {items.map((it, i) => (
+                <Text key={i} style={rowText}>• {it.description} — {it.amount}</Text>
+              ))}
+            </>
+          ) : productService ? (
             <Text style={rowText}><strong style={rowLabel}>Product / Service:</strong> {productService}</Text>
           ) : null}
           {serviceDate ? (
@@ -53,12 +64,19 @@ const CustomerQuoteReadyEmail = ({
           {description ? (
             <Text style={rowText}><strong style={rowLabel}>Description:</strong> {description}</Text>
           ) : null}
-          {(productService || serviceDate || description) ? <Hr style={innerHr} /> : null}
+          {((items && items.length > 0) || productService || serviceDate || description) ? <Hr style={innerHr} /> : null}
           <Text style={rowText}><strong style={rowLabel}>Subtotal:</strong> {subtotal || '—'}</Text>
           <Text style={rowText}><strong style={rowLabel}>GST (10%):</strong> {gst || '—'}</Text>
           <Hr style={innerHr} />
           <Text style={totalText}><strong>Total inc. GST:</strong> {total || '—'}</Text>
         </Section>
+
+        {customerMessage ? (
+          <>
+            <Heading as="h2" style={h2}>A note from us</Heading>
+            <Text style={notes}>{customerMessage}</Text>
+          </>
+        ) : null}
 
         {adminNotes ? (
           <>
@@ -93,6 +111,11 @@ export const template = {
     serviceDate: '15 June 2026',
     productService: 'Garden tidy + hedge trim',
     description: 'Trim two hedges along front fence, mow lawn and remove green waste.',
+    customerMessage: 'Happy to swing by Tuesday morning if that suits — let me know!',
+    items: [
+      { description: 'Hedge trimming (2 hedges)', amount: '$200.00' },
+      { description: 'Green waste removal', amount: '$100.00' },
+    ],
     subtotal: '$300.00',
     gst: '$30.00',
     total: '$330.00',
