@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { notify, type TimeWindow } from "@/lib/jobs";
 
 const QuoteForm = () => {
   const [formData, setFormData] = useState({
@@ -16,9 +18,12 @@ const QuoteForm = () => {
     address: "",
     serviceType: "",
     description: "",
-    preferredDate: ""
+    preferredDate: "",
+    preferredTimeWindow: "" as TimeWindow | "",
   });
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [photoFiles, setPhotoFiles] = useState<FileList | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [website, setWebsite] = useState(""); // honeypot
@@ -72,7 +77,8 @@ const QuoteForm = () => {
         address: "",
         serviceType: "",
         description: "",
-        preferredDate: ""
+        preferredDate: "",
+        preferredTimeWindow: "",
       });
       return;
     }
@@ -87,9 +93,11 @@ const QuoteForm = () => {
       service_type: formData.serviceType,
       description: formData.description,
       preferred_date: formData.preferredDate || null,
+      preferred_time_window: formData.preferredTimeWindow || null,
+      customer_id: user?.id ?? null,
     });
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       toast({
         title: "Submission failed",
         description: error.message,
@@ -97,6 +105,28 @@ const QuoteForm = () => {
       });
       return;
     }
+
+    // Upload photos to job-photos bucket if user is logged in (RLS requires auth)
+    if (user && photoFiles && photoFiles.length > 0) {
+      for (const file of Array.from(photoFiles)) {
+        const path = `${id}/${crypto.randomUUID()}-${file.name}`;
+        const { error: upErr } = await supabase.storage
+          .from("job-photos")
+          .upload(path, file, { upsert: false });
+        if (!upErr) {
+          await supabase.from("job_attachments").insert({
+            job_id: id,
+            uploaded_by: user.id,
+            storage_path: path,
+          });
+        }
+      }
+    }
+    setSubmitting(false);
+
+    // Notification placeholder — admin gets pinged about new request
+    notify.adminNewQuoteRequest(id);
+
     // Notify the business owner — fire and forget
     supabase.functions.invoke("send-transactional-email", {
       body: {
@@ -125,8 +155,10 @@ const QuoteForm = () => {
       address: "",
       serviceType: "",
       description: "",
-      preferredDate: ""
+      preferredDate: "",
+      preferredTimeWindow: "",
     });
+    setPhotoFiles(null);
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -282,6 +314,23 @@ const QuoteForm = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="timeWindow">Preferred Time Window</Label>
+                  <Select
+                    value={formData.preferredTimeWindow}
+                    onValueChange={(v) => setFormData((p) => ({ ...p, preferredTimeWindow: v as TimeWindow }))}
+                  >
+                    <SelectTrigger id="timeWindow" className="bg-background">
+                      <SelectValue placeholder="Select a time window" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="morning">Morning (8am – 12pm)</SelectItem>
+                      <SelectItem value="afternoon">Afternoon (12pm – 5pm)</SelectItem>
+                      <SelectItem value="flexible">Flexible</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="description">Description of the Job *</Label>
                   <Textarea
                     id="description"
@@ -301,9 +350,12 @@ const QuoteForm = () => {
                     multiple
                     accept="image/*"
                     className="bg-background"
+                    onChange={(e) => setPhotoFiles(e.target.files)}
                   />
                   <p className="text-sm text-muted-foreground">
-                    Upload photos to help us better understand your project requirements.
+                    {user
+                      ? "Photos help us prepare a better quote."
+                      : "Sign in to attach photos with your request — or add them later from your dashboard."}
                   </p>
                 </div>
 
