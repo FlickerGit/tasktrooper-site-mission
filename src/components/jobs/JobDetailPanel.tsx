@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { format, parseISO } from "date-fns";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
   STATUS_LABEL,
@@ -21,7 +25,7 @@ import {
 } from "@/lib/jobs";
 import { StatusBadge } from "./StatusBadge";
 import { PhotoUploader } from "./PhotoUploader";
-import { Calendar, ClipboardList, Loader2, Mail, MapPin, Phone, User as UserIcon } from "lucide-react";
+import { Calendar, ChevronDown, ClipboardList, Loader2, Mail, MapPin, Phone, User as UserIcon } from "lucide-react";
 
 type Role = "admin" | "customer" | "staff";
 
@@ -396,11 +400,53 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <Label htmlFor="sched-date">Date</Label>
-                  <Input id="sched-date" type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} className="bg-background" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="sched-date"
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-between bg-background font-normal",
+                          !scheduledDate && "text-muted-foreground",
+                        )}
+                      >
+                        {scheduledDate ? format(parseISO(scheduledDate), "PPP") : "Pick a date"}
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarPicker
+                        mode="single"
+                        selected={scheduledDate ? parseISO(scheduledDate) : undefined}
+                        onSelect={(d) => setScheduledDate(d ? format(d, "yyyy-MM-dd") : "")}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label htmlFor="sched-time">Time</Label>
-                  <Input id="sched-time" type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="bg-background" />
+                  <Select value={scheduledTime || undefined} onValueChange={(v) => setScheduledTime(v)}>
+                    <SelectTrigger id="sched-time" className="bg-background">
+                      <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {Array.from({ length: 24 * 2 }, (_, i) => {
+                        const h = Math.floor(i / 2);
+                        const m = i % 2 === 0 ? "00" : "30";
+                        const value = `${String(h).padStart(2, "0")}:${m}`;
+                        const hr12 = ((h + 11) % 12) + 1;
+                        const ampm = h < 12 ? "AM" : "PM";
+                        return (
+                          <SelectItem key={value} value={value}>
+                            {`${hr12}:${m} ${ampm}`}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="sched-win">Window</Label>
