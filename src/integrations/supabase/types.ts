@@ -392,6 +392,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_quote_requests_by_email: { Args: never; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
