@@ -24,6 +24,8 @@ const Dashboard = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
+    // Link any prior quote requests submitted with this email to the account
+    await supabase.rpc("claim_quote_requests_by_email");
     const { data } = await supabase
       .from("quote_requests")
       .select("*")
