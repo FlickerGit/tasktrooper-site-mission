@@ -21,10 +21,10 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          <a href="#home" className="text-foreground hover:text-primary transition-colors">Home</a>
-          <a href="#services" className="text-foreground hover:text-primary transition-colors">Services</a>
-          <a href="#quote" className="text-foreground hover:text-primary transition-colors">Request a Quote</a>
-          <a href="#contact" className="text-foreground hover:text-primary transition-colors">Contact Us</a>
+          <Link to="/#home" className="text-foreground hover:text-primary transition-colors">Home</Link>
+          <Link to="/#services" className="text-foreground hover:text-primary transition-colors">Services</Link>
+          <Link to="/#quote" className="text-foreground hover:text-primary transition-colors">Request a Quote</Link>
+          <Link to="/#contact" className="text-foreground hover:text-primary transition-colors">Contact Us</Link>
           <Link to="/blog" className="text-foreground hover:text-primary transition-colors">Blog</Link>
         </nav>
 
@@ -49,11 +49,10 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-background border-t border-border">
           <nav className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-            <a href="#home" className="text-foreground hover:text-primary transition-colors">Home</a>
-            <a href="#services" className="text-foreground hover:text-primary transition-colors">Services</a>
-            <a href="#quote" className="text-foreground hover:text-primary transition-colors">Request a Quote</a>
-            <a href="#contact" className="text-foreground hover:text-primary transition-colors">Contact Us</a>
-            
+            <Link to="/#home" className="text-foreground hover:text-primary transition-colors">Home</Link>
+            <Link to="/#services" className="text-foreground hover:text-primary transition-colors">Services</Link>
+            <Link to="/#quote" className="text-foreground hover:text-primary transition-colors">Request a Quote</Link>
+            <Link to="/#contact" className="text-foreground hover:text-primary transition-colors">Contact Us</Link>
             <Link to="/blog" className="text-foreground hover:text-primary transition-colors">Blog</Link>
             <div className="flex flex-col space-y-2 pt-4 border-t border-border">
               <Button variant="ghost" className="text-foreground justify-start">Log In</Button>
