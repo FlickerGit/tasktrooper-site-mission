@@ -26,7 +26,19 @@ import {
 } from "@/lib/jobs";
 import { StatusBadge } from "./StatusBadge";
 import { PhotoUploader } from "./PhotoUploader";
-import { Calendar, ChevronDown, ClipboardList, Loader2, Mail, MapPin, Phone, User as UserIcon } from "lucide-react";
+import { Calendar, ChevronDown, ClipboardList, Loader2, Mail, MapPin, Phone, Plus, Trash2, User as UserIcon } from "lucide-react";
+
+type QuoteItem = { description: string; amount: string };
+
+const parseQuoteItems = (raw: unknown): QuoteItem[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((it) => it && typeof it === "object")
+    .map((it: any) => ({
+      description: String(it.description ?? ""),
+      amount: it.amount != null ? String(it.amount) : "",
+    }));
+};
 
 type Role = "admin" | "customer" | "staff";
 
@@ -70,12 +82,14 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
   // Editable fields (admin only) — initialize from job
   const [adminNotes, setAdminNotes] = useState(job.admin_notes ?? "");
   const [internalNotes, setInternalNotes] = useState(job.internal_notes ?? "");
-  const [subtotalInput, setSubtotalInput] = useState<string>(
-    job.subtotal != null ? String(job.subtotal) : "",
-  );
   const [serviceDate, setServiceDate] = useState<string>(job.service_date ?? "");
   const [productService, setProductService] = useState<string>(job.product_service ?? "");
   const [quoteDescription, setQuoteDescription] = useState<string>(job.quote_description ?? "");
+  const [customerMessage, setCustomerMessage] = useState<string>(job.customer_message ?? "");
+  const [quoteItems, setQuoteItems] = useState<QuoteItem[]>(() => {
+    const items = parseQuoteItems((job as any).quote_items);
+    return items.length > 0 ? items : [{ description: "", amount: "" }];
+  });
   const [scheduledDate, setScheduledDate] = useState(job.scheduled_date ?? "");
   const [scheduledTime, setScheduledTime] = useState(job.scheduled_time ?? "");
   const [scheduledWindow, setScheduledWindow] = useState<TimeWindow | "">(
@@ -95,16 +109,18 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
   useEffect(() => {
     setAdminNotes(job.admin_notes ?? "");
     setInternalNotes(job.internal_notes ?? "");
-    setSubtotalInput(job.subtotal != null ? String(job.subtotal) : "");
     setServiceDate(job.service_date ?? "");
     setProductService(job.product_service ?? "");
     setQuoteDescription(job.quote_description ?? "");
+    setCustomerMessage(job.customer_message ?? "");
+    const items = parseQuoteItems((job as any).quote_items);
+    setQuoteItems(items.length > 0 ? items : [{ description: "", amount: "" }]);
     setScheduledDate(job.scheduled_date ?? "");
     setScheduledTime(job.scheduled_time ?? "");
     setScheduledWindow(job.scheduled_window ?? "");
     setScheduleMode(job.scheduled_window && !job.scheduled_time ? "window" : "time");
     setAssignedStaff(job.assigned_staff_id ?? "");
-  }, [job.id, job.admin_notes, job.internal_notes, job.subtotal, job.service_date, job.product_service, job.quote_description, job.scheduled_date, job.scheduled_time, job.scheduled_window, job.assigned_staff_id]);
+  }, [job.id, job.admin_notes, job.internal_notes, job.subtotal, job.service_date, job.product_service, job.quote_description, job.customer_message, job.scheduled_date, job.scheduled_time, job.scheduled_window, job.assigned_staff_id]);
 
   // Load related data
   useEffect(() => {
@@ -160,11 +176,18 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
     updateJob({ admin_notes: adminNotes, internal_notes: internalNotes }, "Notes saved");
 
   const saveQuote = () => {
-    const sub = parseFloat(subtotalInput);
-    if (isNaN(sub) || sub < 0) {
-      toast({ title: "Enter a valid subtotal", variant: "destructive" });
+    const cleanItems = quoteItems
+      .map((it) => ({ description: it.description.trim(), amount: parseFloat(it.amount) }))
+      .filter((it) => it.description || !isNaN(it.amount));
+    if (cleanItems.length === 0) {
+      toast({ title: "Add at least one product/service", variant: "destructive" });
       return;
     }
+    if (cleanItems.some((it) => isNaN(it.amount) || it.amount < 0)) {
+      toast({ title: "Each product needs a valid amount", variant: "destructive" });
+      return;
+    }
+    const sub = cleanItems.reduce((s, it) => s + it.amount, 0);
     const q = calcQuote(sub);
     return updateJob(
       {
@@ -174,6 +197,8 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
         service_date: serviceDate || null,
         product_service: productService || null,
         quote_description: quoteDescription || null,
+        customer_message: customerMessage || null,
+        quote_items: cleanItems as any,
       },
       "Quote saved",
     );
@@ -204,6 +229,14 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
                 serviceDate: serviceDate || job.scheduled_date || "",
                 productService: productService || "",
                 description: quoteDescription || "",
+                customerMessage: customerMessage || "",
+                items: quoteItems
+                  .map((it) => ({
+                    description: it.description.trim(),
+                    amount: parseFloat(it.amount),
+                  }))
+                  .filter((it) => it.description && !isNaN(it.amount))
+                  .map((it) => ({ description: it.description, amount: formatAUD(it.amount) })),
                 subtotal: formatAUD(job.subtotal),
                 gst: formatAUD(job.gst),
                 total: formatAUD(job.total),
