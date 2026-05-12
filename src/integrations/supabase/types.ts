@@ -125,6 +125,79 @@ export type Database = {
         }
         Relationships: []
       }
+      job_attachments: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          job_id: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          job_id: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_attachments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["job_status"] | null
+          id: string
+          job_id: string
+          note: string | null
+          to_status: Database["public"]["Enums"]["job_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["job_status"] | null
+          id?: string
+          job_id: string
+          note?: string | null
+          to_status: Database["public"]["Enums"]["job_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["job_status"] | null
+          id?: string
+          job_id?: string
+          note?: string | null
+          to_status?: Database["public"]["Enums"]["job_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_status_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -155,36 +228,117 @@ export type Database = {
       quote_requests: {
         Row: {
           address: string
+          admin_notes: string | null
+          assigned_staff_id: string | null
+          completed_at: string | null
           created_at: string
+          customer_id: string | null
           description: string
           email: string
           full_name: string
+          gst: number | null
           id: string
+          internal_notes: string | null
+          invoiced_at: string | null
+          paid_at: string | null
           phone: string
           preferred_date: string | null
+          preferred_time_window:
+            | Database["public"]["Enums"]["time_window"]
+            | null
+          quote_decision_at: string | null
+          quote_rejection_reason: string | null
+          quote_sent_at: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          scheduled_window: Database["public"]["Enums"]["time_window"] | null
           service_type: string
+          status: Database["public"]["Enums"]["job_status"]
+          subtotal: number | null
+          total: number | null
+          updated_at: string
         }
         Insert: {
           address: string
+          admin_notes?: string | null
+          assigned_staff_id?: string | null
+          completed_at?: string | null
           created_at?: string
+          customer_id?: string | null
           description: string
           email: string
           full_name: string
+          gst?: number | null
           id?: string
+          internal_notes?: string | null
+          invoiced_at?: string | null
+          paid_at?: string | null
           phone: string
           preferred_date?: string | null
+          preferred_time_window?:
+            | Database["public"]["Enums"]["time_window"]
+            | null
+          quote_decision_at?: string | null
+          quote_rejection_reason?: string | null
+          quote_sent_at?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          scheduled_window?: Database["public"]["Enums"]["time_window"] | null
           service_type: string
+          status?: Database["public"]["Enums"]["job_status"]
+          subtotal?: number | null
+          total?: number | null
+          updated_at?: string
         }
         Update: {
           address?: string
+          admin_notes?: string | null
+          assigned_staff_id?: string | null
+          completed_at?: string | null
           created_at?: string
+          customer_id?: string | null
           description?: string
           email?: string
           full_name?: string
+          gst?: number | null
           id?: string
+          internal_notes?: string | null
+          invoiced_at?: string | null
+          paid_at?: string | null
           phone?: string
           preferred_date?: string | null
+          preferred_time_window?:
+            | Database["public"]["Enums"]["time_window"]
+            | null
+          quote_decision_at?: string | null
+          quote_rejection_reason?: string | null
+          quote_sent_at?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          scheduled_window?: Database["public"]["Enums"]["time_window"] | null
           service_type?: string
+          status?: Database["public"]["Enums"]["job_status"]
+          subtotal?: number | null
+          total?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      staff_members: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -253,6 +407,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -273,6 +428,18 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      job_status:
+        | "new_request"
+        | "reviewing"
+        | "quoted"
+        | "approved"
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "invoiced"
+        | "paid"
+        | "cancelled"
+      time_window: "morning" | "afternoon" | "flexible"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -401,6 +568,19 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      job_status: [
+        "new_request",
+        "reviewing",
+        "quoted",
+        "approved",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "invoiced",
+        "paid",
+        "cancelled",
+      ],
+      time_window: ["morning", "afternoon", "flexible"],
     },
   },
 } as const
