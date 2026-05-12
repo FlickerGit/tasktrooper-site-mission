@@ -162,19 +162,29 @@ const QuoteForm = () => {
     });
 
     // Forward to Zapier — fire and forget
-    supabase.functions.invoke("zapier-quote-webhook", {
-      body: {
-        id,
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        serviceType: formData.serviceType,
-        description: formData.description,
-        preferredDate: formData.preferredDate || "",
-        preferredTimeWindow: formData.preferredTimeWindow || "",
-      },
-    });
+    // Forward to Zapier via secure edge function
+    try {
+      const { data: zapData, error: zapError } = await supabase.functions.invoke("zapier-quote-webhook", {
+        body: {
+          id,
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          serviceType: formData.serviceType,
+          description: formData.description,
+          preferredDate: formData.preferredDate || "",
+          preferredTimeWindow: formData.preferredTimeWindow || "",
+        },
+      });
+      if (zapError) {
+        console.error("Zapier webhook invoke error:", zapError);
+      } else {
+        console.log("Zapier webhook invoked successfully:", zapData);
+      }
+    } catch (err) {
+      console.error("Zapier webhook threw:", err);
+    }
     toast({
       title: "Quote Request Submitted",
       description: "We'll get back to you within 24 hours with a detailed quote.",
