@@ -1,10 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -30,8 +38,25 @@ const Header = () => {
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center space-x-3">
-          <Button variant="ghost" className="text-foreground">Log In</Button>
-          <Button className="bg-gradient-primary hover:opacity-90">Sign Up</Button>
+          {user ? (
+            <>
+              {isAdmin && (
+                <Link to="/admin">
+                  <Button variant="ghost" className="text-foreground">
+                    <Shield className="h-4 w-4 mr-2" /> Admin
+                  </Button>
+                </Link>
+              )}
+              <Button variant="ghost" className="text-foreground" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" /> Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/auth"><Button variant="ghost" className="text-foreground">Log In</Button></Link>
+              <Link to="/auth"><Button className="bg-gradient-primary hover:opacity-90">Sign Up</Button></Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -55,8 +80,19 @@ const Header = () => {
             <Link to="/#contact" className="text-foreground hover:text-primary transition-colors">Contact Us</Link>
             <Link to="/blog" className="text-foreground hover:text-primary transition-colors">Blog</Link>
             <div className="flex flex-col space-y-2 pt-4 border-t border-border">
-              <Button variant="ghost" className="text-foreground justify-start">Log In</Button>
-              <Button className="bg-gradient-primary hover:opacity-90 justify-start">Sign Up</Button>
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Link to="/admin"><Button variant="ghost" className="text-foreground justify-start w-full">Admin</Button></Link>
+                  )}
+                  <Button variant="ghost" className="text-foreground justify-start" onClick={handleSignOut}>Sign Out</Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/auth"><Button variant="ghost" className="text-foreground justify-start w-full">Log In</Button></Link>
+                  <Link to="/auth"><Button className="bg-gradient-primary hover:opacity-90 justify-start w-full">Sign Up</Button></Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
