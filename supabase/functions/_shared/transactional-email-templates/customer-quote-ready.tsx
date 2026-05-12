@@ -10,6 +10,9 @@ const SITE_NAME = 'TaskTroopers'
 interface QuoteReadyProps {
   fullName?: string
   serviceType?: string
+  serviceDate?: string
+  productService?: string
+  description?: string
   subtotal?: string
   gst?: string
   total?: string
@@ -20,6 +23,9 @@ interface QuoteReadyProps {
 const CustomerQuoteReadyEmail = ({
   fullName,
   serviceType,
+  serviceDate,
+  productService,
+  description,
   subtotal,
   gst,
   total,
@@ -38,6 +44,16 @@ const CustomerQuoteReadyEmail = ({
         </Text>
 
         <Section style={card}>
+          {productService ? (
+            <Text style={rowText}><strong style={rowLabel}>Product / Service:</strong> {productService}</Text>
+          ) : null}
+          {serviceDate ? (
+            <Text style={rowText}><strong style={rowLabel}>Service date:</strong> {serviceDate}</Text>
+          ) : null}
+          {description ? (
+            <Text style={rowText}><strong style={rowLabel}>Description:</strong> {description}</Text>
+          ) : null}
+          {(productService || serviceDate || description) ? <Hr style={innerHr} /> : null}
           <Text style={rowText}><strong style={rowLabel}>Subtotal:</strong> {subtotal || '—'}</Text>
           <Text style={rowText}><strong style={rowLabel}>GST (10%):</strong> {gst || '—'}</Text>
           <Hr style={innerHr} />
@@ -74,6 +90,9 @@ export const template = {
   previewData: {
     fullName: 'Jane Smith',
     serviceType: 'garden',
+    serviceDate: '15 June 2026',
+    productService: 'Garden tidy + hedge trim',
+    description: 'Trim two hedges along front fence, mow lawn and remove green waste.',
     subtotal: '$300.00',
     gst: '$30.00',
     total: '$330.00',

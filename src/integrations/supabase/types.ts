@@ -252,12 +252,15 @@ export type Database = {
           preferred_time_window:
             | Database["public"]["Enums"]["time_window"]
             | null
+          product_service: string | null
           quote_decision_at: string | null
+          quote_description: string | null
           quote_rejection_reason: string | null
           quote_sent_at: string | null
           scheduled_date: string | null
           scheduled_time: string | null
           scheduled_window: Database["public"]["Enums"]["time_window"] | null
+          service_date: string | null
           service_type: string
           status: Database["public"]["Enums"]["job_status"]
           subtotal: number | null
@@ -284,12 +287,15 @@ export type Database = {
           preferred_time_window?:
             | Database["public"]["Enums"]["time_window"]
             | null
+          product_service?: string | null
           quote_decision_at?: string | null
+          quote_description?: string | null
           quote_rejection_reason?: string | null
           quote_sent_at?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
           scheduled_window?: Database["public"]["Enums"]["time_window"] | null
+          service_date?: string | null
           service_type: string
           status?: Database["public"]["Enums"]["job_status"]
           subtotal?: number | null
@@ -316,12 +322,15 @@ export type Database = {
           preferred_time_window?:
             | Database["public"]["Enums"]["time_window"]
             | null
+          product_service?: string | null
           quote_decision_at?: string | null
+          quote_description?: string | null
           quote_rejection_reason?: string | null
           quote_sent_at?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
           scheduled_window?: Database["public"]["Enums"]["time_window"] | null
+          service_date?: string | null
           service_type?: string
           status?: Database["public"]["Enums"]["job_status"]
           subtotal?: number | null
