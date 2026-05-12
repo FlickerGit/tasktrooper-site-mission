@@ -170,7 +170,37 @@ export const JobDetailPanel = ({ job, role, currentUserId, onUpdated }: Props) =
       { status: "quoted", quote_sent_at: new Date().toISOString() },
       "Quote sent to customer",
     );
-    if (ok) notify.customerQuoteSent(job.id, job.email);
+    if (ok) {
+      notify.customerQuoteSent(job.id, job.email);
+      if (job.email) {
+        const { error: emailError } = await supabase.functions.invoke(
+          "send-transactional-email",
+          {
+            body: {
+              templateName: "customer-quote-ready",
+              recipientEmail: job.email,
+              idempotencyKey: `quote-ready-${job.id}-${Date.now()}`,
+              templateData: {
+                fullName: job.full_name,
+                serviceType: job.service_type,
+                subtotal: formatAUD(job.subtotal),
+                gst: formatAUD(job.gst),
+                total: formatAUD(job.total),
+                adminNotes: adminNotes || undefined,
+                portalUrl: `${window.location.origin}/dashboard`,
+              },
+            },
+          },
+        );
+        if (emailError) {
+          toast({
+            title: "Quote saved, but email failed",
+            description: emailError.message,
+            variant: "destructive",
+          });
+        }
+      }
+    }
   };
 
   const scheduleJob = async () => {
