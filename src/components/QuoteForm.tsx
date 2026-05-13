@@ -48,6 +48,67 @@ const QuoteForm = () => {
   const [loadingAddress, setLoadingAddress] = useState(false);
   const addressDebounceRef = useRef<number | null>(null);
   const addressBlurTimeoutRef = useRef<number | null>(null);
+  const [prefilled, setPrefilled] = useState(false);
+
+  // Auto-populate personal info for logged-in users (locked fields)
+  useEffect(() => {
+    if (!user) {
+      setPrefilled(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const [{ data: profile }, { data: lastQuote }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("display_name, email, phone, address")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("quote_requests")
+          .select("first_name, last_name, email, phone, address, street, suburb, postcode, state, country")
+          .eq("customer_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+
+      // Derive first/last name: prefer last quote, fall back to splitting display_name
+      let firstName = lastQuote?.first_name ?? "";
+      let lastName = lastQuote?.last_name ?? "";
+      if (!firstName && !lastName && profile?.display_name) {
+        const parts = profile.display_name.trim().split(/\s+/);
+        firstName = parts[0] ?? "";
+        lastName = parts.slice(1).join(" ");
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        firstName: firstName || prev.firstName,
+        lastName: lastName || prev.lastName,
+        email: lastQuote?.email || profile?.email || user.email || prev.email,
+        phone: lastQuote?.phone || profile?.phone || prev.phone,
+        address: lastQuote?.address || profile?.address || prev.address,
+      }));
+
+      if (lastQuote) {
+        setAddressComponents({
+          street: lastQuote.street ?? "",
+          suburb: lastQuote.suburb ?? "",
+          postcode: lastQuote.postcode ?? "",
+          state: lastQuote.state ?? "",
+          country: lastQuote.country ?? "",
+        });
+      }
+      setPrefilled(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const personalLocked = !!user && prefilled;
 
   useEffect(() => {
     const query = formData.address.trim();
