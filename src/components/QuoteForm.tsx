@@ -388,18 +388,17 @@ const QuoteForm = () => {
                         handleInputChange("address", e.target.value);
                         setShowSuggestions(true);
                       }}
-                      onFocus={() => !lockField(formData.address) && setShowSuggestions(true)}
+                      onFocus={() => setShowSuggestions(true)}
                       onBlur={() => {
                         // Delay to allow click on suggestion
                         addressBlurTimeoutRef.current = window.setTimeout(() => setShowSuggestions(false), 150);
                       }}
                       autoComplete="off"
                       required
-                      readOnly={lockField(formData.address)}
                       className="bg-background"
                       placeholder="Start typing your address..."
                     />
-                    {!lockField(formData.address) && showSuggestions && (addressSuggestions.length > 0 || loadingAddress) && (
+                    {showSuggestions && (addressSuggestions.length > 0 || loadingAddress) && (
                       <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-lg max-h-64 overflow-y-auto">
                         {loadingAddress && addressSuggestions.length === 0 && (
                           <div className="px-3 py-2 text-sm text-muted-foreground">Searching…</div>
@@ -421,9 +420,7 @@ const QuoteForm = () => {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {personalLocked
-                      ? "Using your account details. Update them from your dashboard."
-                      : "Suggestions powered by Google. Australian addresses only."}
+                    Suggestions powered by Google. Australian addresses only.
                   </p>
                 </div>
 
