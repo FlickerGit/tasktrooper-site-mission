@@ -63,6 +63,7 @@ const Dashboard = () => {
             </div>
             <div className="flex gap-2 flex-wrap">
               <ContactDetailsDialog />
+              <ChangePasswordDialog />
               <Button onClick={() => navigate("/#quote")} className="bg-gradient-primary hover:opacity-90">
                 Request a new quote
               </Button>
