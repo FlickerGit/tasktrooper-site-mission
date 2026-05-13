@@ -55,6 +55,11 @@ const QuoteForm = () => {
   const addressBlurTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!user?.email) return;
+    setFormData((prev) => (prev.email === user.email ? prev : { ...prev, email: user.email ?? "" }));
+  }, [user?.email]);
+
+  useEffect(() => {
     const query = formData.address.trim();
     if (addressDebounceRef.current) window.clearTimeout(addressDebounceRef.current);
     if (query.length < 3) {
@@ -100,6 +105,10 @@ const QuoteForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const submittedEmail = user?.email ?? formData.email.trim();
+    const firstName = formData.firstName.trim();
+    const lastName = formData.lastName.trim();
+    const fullName = `${firstName} ${lastName}`.trim();
     // Spam protection: honeypot field only. Avoid silently dropping fast legitimate/test submissions.
     if (website.trim() !== "") {
       toast({
@@ -123,10 +132,10 @@ const QuoteForm = () => {
     const id = crypto.randomUUID();
     const { error } = await supabase.from("quote_requests").insert({
       id,
-      full_name: `${formData.firstName} ${formData.lastName}`.trim(),
-      first_name: formData.firstName,
-      last_name: formData.lastName,
-      email: formData.email,
+      full_name: fullName,
+      first_name: firstName,
+      last_name: lastName,
+      email: submittedEmail,
       phone: formData.phone,
       address: formData.address,
       street: addressComponents.street || null,
@@ -142,9 +151,14 @@ const QuoteForm = () => {
     });
     if (error) {
       setSubmitting(false);
+      const isCustomerEmailConflict = error.message.toLowerCase().includes("row-level security");
       toast({
         title: "Submission failed",
-        description: error.message,
+        description: isCustomerEmailConflict
+          ? user
+            ? "Please use the email address linked to your signed-in account for quote requests."
+            : "That email is already linked to an existing customer. Please sign in to request another quote."
+          : error.message,
         variant: "destructive",
       });
       return;
@@ -178,10 +192,10 @@ const QuoteForm = () => {
         recipientEmail: "mark@tasktroopers.com.au",
         idempotencyKey: `quote-${id}`,
         templateData: {
-          fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
+          fullName,
+          firstName,
+          lastName,
+          email: submittedEmail,
           phone: formData.phone,
           address: formData.address,
           street: addressComponents.street,
@@ -201,10 +215,10 @@ const QuoteForm = () => {
       const { error: zapError } = await supabase.functions.invoke("zapier-quote-webhook", {
         body: {
           id,
-          fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
+          fullName,
+          firstName,
+          lastName,
+          email: submittedEmail,
           phone: formData.phone,
           address: formData.address,
           street: addressComponents.street,
