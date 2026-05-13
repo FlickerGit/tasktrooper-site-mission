@@ -242,11 +242,13 @@ export type Database = {
           customer_message: string | null
           description: string
           email: string
+          first_name: string | null
           full_name: string
           gst: number | null
           id: string
           internal_notes: string | null
           invoiced_at: string | null
+          last_name: string | null
           paid_at: string | null
           phone: string
           preferred_date: string | null
@@ -279,11 +281,13 @@ export type Database = {
           customer_message?: string | null
           description: string
           email: string
+          first_name?: string | null
           full_name: string
           gst?: number | null
           id?: string
           internal_notes?: string | null
           invoiced_at?: string | null
+          last_name?: string | null
           paid_at?: string | null
           phone: string
           preferred_date?: string | null
@@ -316,11 +320,13 @@ export type Database = {
           customer_message?: string | null
           description?: string
           email?: string
+          first_name?: string | null
           full_name?: string
           gst?: number | null
           id?: string
           internal_notes?: string | null
           invoiced_at?: string | null
+          last_name?: string | null
           paid_at?: string | null
           phone?: string
           preferred_date?: string | null
