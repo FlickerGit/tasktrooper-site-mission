@@ -95,7 +95,8 @@ const QuoteForm = () => {
         description: "We'll get back to you within 24 hours with a detailed quote.",
       });
       setFormData({
-        fullName: "",
+        firstName: "",
+        lastName: "",
         email: "",
         phone: "",
         address: "",
