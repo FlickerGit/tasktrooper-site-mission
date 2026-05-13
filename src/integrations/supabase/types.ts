@@ -202,31 +202,52 @@ export type Database = {
         Row: {
           address: string | null
           avatar_url: string | null
+          country: string | null
           created_at: string
           display_name: string | null
           email: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           phone: string | null
+          postcode: string | null
+          state: string | null
+          street: string | null
+          suburb: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
           avatar_url?: string | null
+          country?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
+          first_name?: string | null
           id: string
+          last_name?: string | null
           phone?: string | null
+          postcode?: string | null
+          state?: string | null
+          street?: string | null
+          suburb?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
           avatar_url?: string | null
+          country?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           phone?: string | null
+          postcode?: string | null
+          state?: string | null
+          street?: string | null
+          suburb?: string | null
           updated_at?: string
         }
         Relationships: []
