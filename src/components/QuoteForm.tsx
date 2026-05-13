@@ -29,6 +29,13 @@ const QuoteForm = () => {
     preferredDate: "",
     preferredTimeWindow: "" as TimeWindow | "",
   });
+  const [addressComponents, setAddressComponents] = useState({
+    street: "",
+    suburb: "",
+    postcode: "",
+    state: "",
+    country: "",
+  });
   const { toast } = useToast();
   const { user } = useAuth();
   const [photoFiles, setPhotoFiles] = useState<FileList | null>(null);
@@ -117,6 +124,11 @@ const QuoteForm = () => {
       email: formData.email,
       phone: formData.phone,
       address: formData.address,
+      street: addressComponents.street || null,
+      suburb: addressComponents.suburb || null,
+      postcode: addressComponents.postcode || null,
+      state: addressComponents.state || null,
+      country: addressComponents.country || null,
       service_type: formData.serviceType,
       description: formData.description,
       preferred_date: formData.preferredDate || null,
@@ -167,6 +179,11 @@ const QuoteForm = () => {
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
+          street: addressComponents.street,
+          suburb: addressComponents.suburb,
+          postcode: addressComponents.postcode,
+          state: addressComponents.state,
+          country: addressComponents.country,
           serviceType: formData.serviceType,
           description: formData.description,
           preferredDate: formData.preferredDate || "",
@@ -185,6 +202,11 @@ const QuoteForm = () => {
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
+          street: addressComponents.street,
+          suburb: addressComponents.suburb,
+          postcode: addressComponents.postcode,
+          state: addressComponents.state,
+          country: addressComponents.country,
           serviceType: formData.serviceType,
           description: formData.description,
           preferredDate: formData.preferredDate || "",
@@ -216,6 +238,7 @@ const QuoteForm = () => {
       preferredDate: "",
       preferredTimeWindow: "",
     });
+    setAddressComponents({ street: "", suburb: "", postcode: "", state: "", country: "" });
     setPhotoFiles(null);
   };
 
@@ -223,10 +246,38 @@ const QuoteForm = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const selectAddress = (description: string) => {
+  const selectAddress = async (description: string, placeId: string) => {
     setFormData(prev => ({ ...prev, address: description }));
     setAddressSuggestions([]);
     setShowSuggestions(false);
+    // Fetch place details to extract address components
+    try {
+      const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}`, {
+        method: "GET",
+        headers: {
+          "X-Goog-Api-Key": "AIzaSyDA-u_jDSyq8Bgd3o_Y7sI_ySBcHp0b0VQ",
+          "X-Goog-FieldMask": "addressComponents",
+        },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const components: Array<{ longText: string; shortText: string; types: string[] }> = data.addressComponents ?? [];
+      const get = (type: string, short = false) => {
+        const c = components.find((x) => x.types.includes(type));
+        return c ? (short ? c.shortText : c.longText) : "";
+      };
+      const streetNumber = get("street_number");
+      const route = get("route");
+      setAddressComponents({
+        street: [streetNumber, route].filter(Boolean).join(" "),
+        suburb: get("locality") || get("sublocality") || get("postal_town"),
+        postcode: get("postal_code"),
+        state: get("administrative_area_level_1", true),
+        country: get("country"),
+      });
+    } catch {
+      // silent — components stay empty, full address still stored
+    }
   };
 
   return (
@@ -358,7 +409,7 @@ const QuoteForm = () => {
                             type="button"
                             onMouseDown={(e) => {
                               e.preventDefault();
-                              selectAddress(s.description);
+                              selectAddress(s.description, s.placeId);
                             }}
                             className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
                           >
