@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         ...payload,
         triggered_at: new Date().toISOString(),
-        source: 'tasktroopers-quote-form',
+        source: 'Tasktroopers Website',
       }),
     });
 
