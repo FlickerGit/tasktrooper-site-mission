@@ -19,7 +19,8 @@ type PlaceAutocompleteSuggestion = {
 
 const QuoteForm = () => {
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     address: "",
