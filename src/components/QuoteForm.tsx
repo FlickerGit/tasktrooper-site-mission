@@ -19,7 +19,8 @@ type PlaceAutocompleteSuggestion = {
 
 const QuoteForm = () => {
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     address: "",
@@ -94,7 +95,8 @@ const QuoteForm = () => {
         description: "We'll get back to you within 24 hours with a detailed quote.",
       });
       setFormData({
-        fullName: "",
+        firstName: "",
+        lastName: "",
         email: "",
         phone: "",
         address: "",
@@ -109,7 +111,7 @@ const QuoteForm = () => {
     const id = crypto.randomUUID();
     const { error } = await supabase.from("quote_requests").insert({
       id,
-      full_name: formData.fullName,
+      full_name: `${formData.firstName} ${formData.lastName}`.trim(),
       email: formData.email,
       phone: formData.phone,
       address: formData.address,
@@ -157,7 +159,7 @@ const QuoteForm = () => {
         recipientEmail: "mark@tasktroopers.com.au",
         idempotencyKey: `quote-${id}`,
         templateData: {
-          fullName: formData.fullName,
+          fullName: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
@@ -173,7 +175,7 @@ const QuoteForm = () => {
       const { error: zapError } = await supabase.functions.invoke("zapier-quote-webhook", {
         body: {
           id,
-          fullName: formData.fullName,
+          fullName: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
@@ -198,7 +200,8 @@ const QuoteForm = () => {
       description: "We'll get back to you within 24 hours with a detailed quote.",
     });
     setFormData({
-      fullName: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       address: "",
@@ -256,15 +259,28 @@ const QuoteForm = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name *</Label>
+                    <Label htmlFor="firstName">First Name *</Label>
                     <Input
-                      id="fullName"
-                      value={formData.fullName}
-                      onChange={(e) => handleInputChange("fullName", e.target.value)}
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange("firstName", e.target.value)}
                       required
                       className="bg-background"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange("lastName", e.target.value)}
+                      required
+                      className="bg-background"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address *</Label>
                     <Input
@@ -276,9 +292,6 @@ const QuoteForm = () => {
                       className="bg-background"
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number *</Label>
                     <Input
@@ -290,21 +303,22 @@ const QuoteForm = () => {
                       className="bg-background"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="serviceType">Type of Service *</Label>
-                    <Select value={formData.serviceType} onValueChange={(value) => handleInputChange("serviceType", value)}>
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select service type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="garden">Garden Maintenance</SelectItem>
-                        <SelectItem value="building">Building Maintenance</SelectItem>
-                        <SelectItem value="both">Both Garden & Building</SelectItem>
-                        <SelectItem value="cleaning">End-of-Lease & Strata Cleaning</SelectItem>
-                        <SelectItem value="custom">Custom Request</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="serviceType">Type of Service *</Label>
+                  <Select value={formData.serviceType} onValueChange={(value) => handleInputChange("serviceType", value)}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Select service type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="garden">Garden Maintenance</SelectItem>
+                      <SelectItem value="building">Building Maintenance</SelectItem>
+                      <SelectItem value="both">Both Garden & Building</SelectItem>
+                      <SelectItem value="cleaning">End-of-Lease & Strata Cleaning</SelectItem>
+                      <SelectItem value="custom">Custom Request</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
