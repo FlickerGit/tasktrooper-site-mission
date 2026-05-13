@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import type { Job } from "@/lib/jobs";
 import { Button } from "@/components/ui/button";
 import { ContactDetailsDialog } from "@/components/ContactDetailsDialog";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
