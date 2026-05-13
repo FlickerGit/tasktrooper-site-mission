@@ -322,7 +322,6 @@ const QuoteForm = () => {
                       value={formData.firstName}
                       onChange={(e) => handleInputChange("firstName", e.target.value)}
                       required
-                      readOnly={lockField(formData.firstName)}
                       className="bg-background"
                     />
                   </div>
@@ -333,7 +332,6 @@ const QuoteForm = () => {
                       value={formData.lastName}
                       onChange={(e) => handleInputChange("lastName", e.target.value)}
                       required
-                      readOnly={lockField(formData.lastName)}
                       className="bg-background"
                     />
                   </div>
@@ -348,7 +346,6 @@ const QuoteForm = () => {
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       required
-                      readOnly={lockField(formData.email)}
                       className="bg-background"
                     />
                   </div>
@@ -360,7 +357,6 @@ const QuoteForm = () => {
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       required
-                      readOnly={lockField(formData.phone)}
                       className="bg-background"
                     />
                   </div>
