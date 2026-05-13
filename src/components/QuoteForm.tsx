@@ -48,6 +48,67 @@ const QuoteForm = () => {
   const [loadingAddress, setLoadingAddress] = useState(false);
   const addressDebounceRef = useRef<number | null>(null);
   const addressBlurTimeoutRef = useRef<number | null>(null);
+  const [prefilled, setPrefilled] = useState(false);
+
+  // Auto-populate personal info for logged-in users (locked fields)
+  useEffect(() => {
+    if (!user) {
+      setPrefilled(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const [{ data: profile }, { data: lastQuote }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("display_name, email, phone, address")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("quote_requests")
+          .select("first_name, last_name, email, phone, address, street, suburb, postcode, state, country")
+          .eq("customer_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+
+      // Derive first/last name: prefer last quote, fall back to splitting display_name
+      let firstName = lastQuote?.first_name ?? "";
+      let lastName = lastQuote?.last_name ?? "";
+      if (!firstName && !lastName && profile?.display_name) {
+        const parts = profile.display_name.trim().split(/\s+/);
+        firstName = parts[0] ?? "";
+        lastName = parts.slice(1).join(" ");
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        firstName: firstName || prev.firstName,
+        lastName: lastName || prev.lastName,
+        email: lastQuote?.email || profile?.email || user.email || prev.email,
+        phone: lastQuote?.phone || profile?.phone || prev.phone,
+        address: lastQuote?.address || profile?.address || prev.address,
+      }));
+
+      if (lastQuote) {
+        setAddressComponents({
+          street: lastQuote.street ?? "",
+          suburb: lastQuote.suburb ?? "",
+          postcode: lastQuote.postcode ?? "",
+          state: lastQuote.state ?? "",
+          country: lastQuote.country ?? "",
+        });
+      }
+      setPrefilled(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const personalLocked = !!user && prefilled;
 
   useEffect(() => {
     const query = formData.address.trim();
@@ -322,6 +383,7 @@ const QuoteForm = () => {
                       value={formData.firstName}
                       onChange={(e) => handleInputChange("firstName", e.target.value)}
                       required
+                      readOnly={personalLocked}
                       className="bg-background"
                     />
                   </div>
@@ -332,6 +394,7 @@ const QuoteForm = () => {
                       value={formData.lastName}
                       onChange={(e) => handleInputChange("lastName", e.target.value)}
                       required
+                      readOnly={personalLocked}
                       className="bg-background"
                     />
                   </div>
@@ -346,6 +409,7 @@ const QuoteForm = () => {
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       required
+                      readOnly={personalLocked}
                       className="bg-background"
                     />
                   </div>
@@ -357,6 +421,7 @@ const QuoteForm = () => {
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       required
+                      readOnly={personalLocked}
                       className="bg-background"
                     />
                   </div>
@@ -388,17 +453,18 @@ const QuoteForm = () => {
                         handleInputChange("address", e.target.value);
                         setShowSuggestions(true);
                       }}
-                      onFocus={() => setShowSuggestions(true)}
+                      onFocus={() => !personalLocked && setShowSuggestions(true)}
                       onBlur={() => {
                         // Delay to allow click on suggestion
                         addressBlurTimeoutRef.current = window.setTimeout(() => setShowSuggestions(false), 150);
                       }}
                       autoComplete="off"
                       required
+                      readOnly={personalLocked}
                       className="bg-background"
                       placeholder="Start typing your address..."
                     />
-                    {showSuggestions && (addressSuggestions.length > 0 || loadingAddress) && (
+                    {!personalLocked && showSuggestions && (addressSuggestions.length > 0 || loadingAddress) && (
                       <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-lg max-h-64 overflow-y-auto">
                         {loadingAddress && addressSuggestions.length === 0 && (
                           <div className="px-3 py-2 text-sm text-muted-foreground">Searching…</div>
@@ -419,7 +485,11 @@ const QuoteForm = () => {
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">Suggestions powered by Google. Australian addresses only.</p>
+                  <p className="text-xs text-muted-foreground">
+                    {personalLocked
+                      ? "Using your account details. Update them from your dashboard."
+                      : "Suggestions powered by Google. Australian addresses only."}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
