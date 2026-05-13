@@ -426,13 +426,30 @@ const QuoteForm = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="preferredDate">Preferred Date</Label>
-                  <Input
-                    id="preferredDate"
-                    type="date"
-                    value={formData.preferredDate}
-                    onChange={(e) => handleInputChange("preferredDate", e.target.value)}
-                    className="bg-background"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="preferredDate"
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal bg-background",
+                          !formData.preferredDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.preferredDate ? format(new Date(formData.preferredDate), "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.preferredDate ? new Date(formData.preferredDate) : undefined}
+                        onSelect={(date) => handleInputChange("preferredDate", date ? format(date, "yyyy-MM-dd") : "")}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">
