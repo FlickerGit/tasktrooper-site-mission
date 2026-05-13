@@ -237,6 +237,7 @@ export type Database = {
           admin_notes: string | null
           assigned_staff_id: string | null
           completed_at: string | null
+          country: string | null
           created_at: string
           customer_id: string | null
           customer_message: string | null
@@ -251,6 +252,7 @@ export type Database = {
           last_name: string | null
           paid_at: string | null
           phone: string
+          postcode: string | null
           preferred_date: string | null
           preferred_time_window:
             | Database["public"]["Enums"]["time_window"]
@@ -266,8 +268,11 @@ export type Database = {
           scheduled_window: Database["public"]["Enums"]["time_window"] | null
           service_date: string | null
           service_type: string
+          state: string | null
           status: Database["public"]["Enums"]["job_status"]
+          street: string | null
           subtotal: number | null
+          suburb: string | null
           total: number | null
           updated_at: string
         }
@@ -276,6 +281,7 @@ export type Database = {
           admin_notes?: string | null
           assigned_staff_id?: string | null
           completed_at?: string | null
+          country?: string | null
           created_at?: string
           customer_id?: string | null
           customer_message?: string | null
@@ -290,6 +296,7 @@ export type Database = {
           last_name?: string | null
           paid_at?: string | null
           phone: string
+          postcode?: string | null
           preferred_date?: string | null
           preferred_time_window?:
             | Database["public"]["Enums"]["time_window"]
@@ -305,8 +312,11 @@ export type Database = {
           scheduled_window?: Database["public"]["Enums"]["time_window"] | null
           service_date?: string | null
           service_type: string
+          state?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          street?: string | null
           subtotal?: number | null
+          suburb?: string | null
           total?: number | null
           updated_at?: string
         }
@@ -315,6 +325,7 @@ export type Database = {
           admin_notes?: string | null
           assigned_staff_id?: string | null
           completed_at?: string | null
+          country?: string | null
           created_at?: string
           customer_id?: string | null
           customer_message?: string | null
@@ -329,6 +340,7 @@ export type Database = {
           last_name?: string | null
           paid_at?: string | null
           phone?: string
+          postcode?: string | null
           preferred_date?: string | null
           preferred_time_window?:
             | Database["public"]["Enums"]["time_window"]
@@ -344,8 +356,11 @@ export type Database = {
           scheduled_window?: Database["public"]["Enums"]["time_window"] | null
           service_date?: string | null
           service_type?: string
+          state?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          street?: string | null
           subtotal?: number | null
+          suburb?: string | null
           total?: number | null
           updated_at?: string
         }
