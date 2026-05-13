@@ -48,52 +48,6 @@ const QuoteForm = () => {
   const [loadingAddress, setLoadingAddress] = useState(false);
   const addressDebounceRef = useRef<number | null>(null);
   const addressBlurTimeoutRef = useRef<number | null>(null);
-  const [prefilled, setPrefilled] = useState(false);
-
-  // Auto-populate personal info for logged-in users from their account profile only.
-  // Do not reuse previous quote submissions, because public/test quote data can differ
-  // from the logged-in user's actual account details.
-  useEffect(() => {
-    if (!user) {
-      setPrefilled(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name, email, phone, address")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (cancelled) return;
-
-      let firstName = "";
-      let lastName = "";
-      if (profile?.display_name) {
-        const parts = profile.display_name.trim().split(/\s+/);
-        firstName = parts[0] ?? "";
-        lastName = parts.slice(1).join(" ");
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        firstName: firstName || prev.firstName,
-        lastName: lastName || prev.lastName,
-        email: profile?.email || user.email || prev.email,
-        phone: profile?.phone || prev.phone,
-        address: profile?.address || prev.address,
-      }));
-      setPrefilled(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
-
-  const personalLocked = !!user && prefilled;
-  // Lock individual fields only when we actually have a value to lock —
-  // otherwise empty required fields would be unfillable.
-  const lockField = (value: string) => personalLocked && value.trim().length > 0;
 
   useEffect(() => {
     const query = formData.address.trim();
