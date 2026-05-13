@@ -434,6 +434,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_insert_quote_request: {
+        Args: { _customer_id: string; _email: string }
+        Returns: boolean
+      }
       claim_quote_requests_by_email: { Args: never; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
