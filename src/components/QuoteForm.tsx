@@ -48,52 +48,6 @@ const QuoteForm = () => {
   const [loadingAddress, setLoadingAddress] = useState(false);
   const addressDebounceRef = useRef<number | null>(null);
   const addressBlurTimeoutRef = useRef<number | null>(null);
-  const [prefilled, setPrefilled] = useState(false);
-
-  // Auto-populate personal info for logged-in users from their account profile only.
-  // Do not reuse previous quote submissions, because public/test quote data can differ
-  // from the logged-in user's actual account details.
-  useEffect(() => {
-    if (!user) {
-      setPrefilled(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name, email, phone, address")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (cancelled) return;
-
-      let firstName = "";
-      let lastName = "";
-      if (profile?.display_name) {
-        const parts = profile.display_name.trim().split(/\s+/);
-        firstName = parts[0] ?? "";
-        lastName = parts.slice(1).join(" ");
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        firstName: firstName || prev.firstName,
-        lastName: lastName || prev.lastName,
-        email: profile?.email || user.email || prev.email,
-        phone: profile?.phone || prev.phone,
-        address: profile?.address || prev.address,
-      }));
-      setPrefilled(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
-
-  const personalLocked = !!user && prefilled;
-  // Lock individual fields only when we actually have a value to lock —
-  // otherwise empty required fields would be unfillable.
-  const lockField = (value: string) => personalLocked && value.trim().length > 0;
 
   useEffect(() => {
     const query = formData.address.trim();
@@ -368,7 +322,6 @@ const QuoteForm = () => {
                       value={formData.firstName}
                       onChange={(e) => handleInputChange("firstName", e.target.value)}
                       required
-                      readOnly={lockField(formData.firstName)}
                       className="bg-background"
                     />
                   </div>
@@ -379,7 +332,6 @@ const QuoteForm = () => {
                       value={formData.lastName}
                       onChange={(e) => handleInputChange("lastName", e.target.value)}
                       required
-                      readOnly={lockField(formData.lastName)}
                       className="bg-background"
                     />
                   </div>
@@ -394,7 +346,6 @@ const QuoteForm = () => {
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       required
-                      readOnly={lockField(formData.email)}
                       className="bg-background"
                     />
                   </div>
@@ -406,7 +357,6 @@ const QuoteForm = () => {
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       required
-                      readOnly={lockField(formData.phone)}
                       className="bg-background"
                     />
                   </div>
@@ -438,18 +388,17 @@ const QuoteForm = () => {
                         handleInputChange("address", e.target.value);
                         setShowSuggestions(true);
                       }}
-                      onFocus={() => !lockField(formData.address) && setShowSuggestions(true)}
+                      onFocus={() => setShowSuggestions(true)}
                       onBlur={() => {
                         // Delay to allow click on suggestion
                         addressBlurTimeoutRef.current = window.setTimeout(() => setShowSuggestions(false), 150);
                       }}
                       autoComplete="off"
                       required
-                      readOnly={lockField(formData.address)}
                       className="bg-background"
                       placeholder="Start typing your address..."
                     />
-                    {!lockField(formData.address) && showSuggestions && (addressSuggestions.length > 0 || loadingAddress) && (
+                    {showSuggestions && (addressSuggestions.length > 0 || loadingAddress) && (
                       <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-lg max-h-64 overflow-y-auto">
                         {loadingAddress && addressSuggestions.length === 0 && (
                           <div className="px-3 py-2 text-sm text-muted-foreground">Searching…</div>
@@ -471,9 +420,7 @@ const QuoteForm = () => {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {personalLocked
-                      ? "Using your account details. Update them from your dashboard."
-                      : "Suggestions powered by Google. Australian addresses only."}
+                    Suggestions powered by Google. Australian addresses only.
                   </p>
                 </div>
 
