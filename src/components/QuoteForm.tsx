@@ -112,6 +112,8 @@ const QuoteForm = () => {
     const { error } = await supabase.from("quote_requests").insert({
       id,
       full_name: `${formData.firstName} ${formData.lastName}`.trim(),
+      first_name: formData.firstName,
+      last_name: formData.lastName,
       email: formData.email,
       phone: formData.phone,
       address: formData.address,
@@ -160,6 +162,8 @@ const QuoteForm = () => {
         idempotencyKey: `quote-${id}`,
         templateData: {
           fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
@@ -176,6 +180,8 @@ const QuoteForm = () => {
         body: {
           id,
           fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
