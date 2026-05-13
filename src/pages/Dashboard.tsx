@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import type { Job } from "@/lib/jobs";
 import { Button } from "@/components/ui/button";
 import { ContactDetailsDialog } from "@/components/ContactDetailsDialog";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ const Dashboard = () => {
             </div>
             <div className="flex gap-2 flex-wrap">
               <ContactDetailsDialog />
+              <ChangePasswordDialog />
               <Button onClick={() => navigate("/#quote")} className="bg-gradient-primary hover:opacity-90">
                 Request a new quote
               </Button>
