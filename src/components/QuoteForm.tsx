@@ -111,7 +111,7 @@ const QuoteForm = () => {
     const id = crypto.randomUUID();
     const { error } = await supabase.from("quote_requests").insert({
       id,
-      full_name: formData.fullName,
+      full_name: `${formData.firstName} ${formData.lastName}`.trim(),
       email: formData.email,
       phone: formData.phone,
       address: formData.address,
@@ -159,7 +159,7 @@ const QuoteForm = () => {
         recipientEmail: "mark@tasktroopers.com.au",
         idempotencyKey: `quote-${id}`,
         templateData: {
-          fullName: formData.fullName,
+          fullName: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
@@ -175,7 +175,7 @@ const QuoteForm = () => {
       const { error: zapError } = await supabase.functions.invoke("zapier-quote-webhook", {
         body: {
           id,
-          fullName: formData.fullName,
+          fullName: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
@@ -200,7 +200,8 @@ const QuoteForm = () => {
       description: "We'll get back to you within 24 hours with a detailed quote.",
     });
     setFormData({
-      fullName: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       address: "",
