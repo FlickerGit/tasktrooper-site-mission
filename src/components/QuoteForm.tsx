@@ -50,7 +50,9 @@ const QuoteForm = () => {
   const addressBlurTimeoutRef = useRef<number | null>(null);
   const [prefilled, setPrefilled] = useState(false);
 
-  // Auto-populate personal info for logged-in users (locked fields)
+  // Auto-populate personal info for logged-in users from their account profile only.
+  // Do not reuse previous quote submissions, because public/test quote data can differ
+  // from the logged-in user's actual account details.
   useEffect(() => {
     if (!user) {
       setPrefilled(false);
@@ -58,26 +60,16 @@ const QuoteForm = () => {
     }
     let cancelled = false;
     (async () => {
-      const [{ data: profile }, { data: lastQuote }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("display_name, email, phone, address")
-          .eq("id", user.id)
-          .maybeSingle(),
-        supabase
-          .from("quote_requests")
-          .select("first_name, last_name, email, phone, address, street, suburb, postcode, state, country")
-          .eq("customer_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, email, phone, address")
+        .eq("id", user.id)
+        .maybeSingle();
       if (cancelled) return;
 
-      // Derive first/last name: prefer last quote, fall back to splitting display_name
-      let firstName = lastQuote?.first_name ?? "";
-      let lastName = lastQuote?.last_name ?? "";
-      if (!firstName && !lastName && profile?.display_name) {
+      let firstName = "";
+      let lastName = "";
+      if (profile?.display_name) {
         const parts = profile.display_name.trim().split(/\s+/);
         firstName = parts[0] ?? "";
         lastName = parts.slice(1).join(" ");
@@ -87,20 +79,10 @@ const QuoteForm = () => {
         ...prev,
         firstName: firstName || prev.firstName,
         lastName: lastName || prev.lastName,
-        email: lastQuote?.email || profile?.email || user.email || prev.email,
-        phone: lastQuote?.phone || profile?.phone || prev.phone,
-        address: lastQuote?.address || profile?.address || prev.address,
+        email: profile?.email || user.email || prev.email,
+        phone: profile?.phone || prev.phone,
+        address: profile?.address || prev.address,
       }));
-
-      if (lastQuote) {
-        setAddressComponents({
-          street: lastQuote.street ?? "",
-          suburb: lastQuote.suburb ?? "",
-          postcode: lastQuote.postcode ?? "",
-          state: lastQuote.state ?? "",
-          country: lastQuote.country ?? "",
-        });
-      }
       setPrefilled(true);
     })();
     return () => {
